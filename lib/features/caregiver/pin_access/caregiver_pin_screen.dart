@@ -5,8 +5,8 @@ import '../dashboard/caregiver_dashboard_screen.dart';
 import 'pin_controller.dart';
 
 class CaregiverPinScreen extends StatefulWidget {
-  final GameSession session;
-  const CaregiverPinScreen({super.key, required this.session});
+  final GameSession? session;
+  const CaregiverPinScreen({super.key, this.session});
 
   @override
   State<CaregiverPinScreen> createState() => _CaregiverPinScreenState();
