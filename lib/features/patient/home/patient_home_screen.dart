@@ -19,228 +19,368 @@ class PatientHomeScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(language);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 16,
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+
+      body: Stack(
+        children: [
+          // FULL SCREEN LANDSCAPE BACKGROUND
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/welcome_landscape.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --------------------------------------------------
-              // GREETING
-              // --------------------------------------------------
-              Text(
-                '${l10n.goodMorning}, Leima! 🌸',
-                style: Theme.of(context).textTheme.headlineMedium,
+
+          // LIGHT OVERLAY
+          Positioned.fill(
+            child: Container(
+              color: Colors.white.withValues(alpha: 0.18),
+            ),
+          ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                24,
+                18,
+                24,
+                120,
               ),
+              child: Column(
+                children: [
+                  // TOP BAR
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryGreen,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Online',
+                              style: TextStyle(
+                                color: AppColors.primaryGreen,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-              const SizedBox(height: 20),
+                      Container(
+                        width: 58,
+                        height: 58,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.border,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.volume_up_rounded,
+                          color: AppColors.primaryGreen,
+                          size: 30,
+                        ),
+                      ),
+                    ],
+                  ),
 
-              // --------------------------------------------------
-              // MEMORY ACTIVITY TITLE
-              // --------------------------------------------------
-              Text(
-                l10n.memoryActivity,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+                  const SizedBox(height: 24),
 
-              const SizedBox(height: 12),
+                  // GREETING
+                  Text(
+                    '${l10n.goodMorning},\nLeima! 🌸',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                      height: 1.15,
+                    ),
+                  ),
 
-              // --------------------------------------------------
-              // MEMORY ACTIVITY CARD
-              // --------------------------------------------------
-              AppCard(
-                color: AppColors.primaryGreenLight,
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // FAMILY PHOTOS + PLAY BUTTON
-                    Row(
+                  const SizedBox(height: 28),
+
+                  // TODAY'S MEMORY ACTIVITY
+                  AppCard(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
                       children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primaryGreenLight,
+                                borderRadius:
+                                    BorderRadius.circular(18),
+                              ),
+                              child: const Icon(
+                                Icons.groups_rounded,
+                                color: AppColors.primaryGreen,
+                                size: 36,
+                              ),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Today's Memory Activity",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          fontWeight:
+                                              FontWeight.w800,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    l10n.peopleVoicesMemories,
+                                    style: const TextStyle(
+                                      color:
+                                          AppColors.textMedium,
+                                      fontSize: 17,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const FaceNameMatchScreen(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  AppColors.primaryGreen,
+                              foregroundColor: Colors.white,
+                              minimumSize:
+                                  const Size(double.infinity, 58),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(18),
+                              ),
+                            ),
+                            child: const Text(
+                              'Start Activity',
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // QUICK CARDS
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _QuickReminderCard(
+                          icon: Icons.medication_rounded,
+                          iconColor:
+                              const Color(0xFFF3B6C4),
+                          title: 'Medicine',
+                          subtitle: '8:00 AM',
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: _QuickReminderCard(
+                          icon: Icons.water_drop_rounded,
+                          iconColor:
+                              const Color(0xFFA8D0E6),
+                          title: 'Water',
+                          subtitle: '10:00 AM',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _QuickReminderCard(
+                          icon:
+                              Icons.directions_walk_rounded,
+                          iconColor:
+                              const Color(0xFFB9DEBE),
+                          title: 'Activity',
+                          subtitle: '5:00 PM',
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: _QuickReminderCard(
+                          icon:
+                              Icons.calendar_month_rounded,
+                          iconColor:
+                              const Color(0xFFE8B0B7),
+                          title: 'Appointment',
+                          subtitle: 'Tomorrow',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // MEMORY CIRCLE
+                  AppCard(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    padding: const EdgeInsets.all(20),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const MemoryCircleScreen(),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3B6C4),
+                            borderRadius:
+                                BorderRadius.circular(18),
+                          ),
+                          child: const Icon(
+                            Icons.people_alt_rounded,
+                            color: Colors.white,
+                            size: 34,
+                          ),
+                        ),
+
+                        const SizedBox(width: 16),
+
                         Expanded(
-                          child: Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
-                              _FamilyPhoto(
-                                imagePath:
-                                    'assets/images/characters/meera.jpeg',
+                              Text(
+                                l10n.memoryCircle,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight:
+                                          FontWeight.w800,
+                                    ),
                               ),
-                              _FamilyPhoto(
-                                imagePath:
-                                    'assets/images/characters/rahul.jpeg',
-                              ),
-                              _FamilyPhoto(
-                                imagePath:
-                                    'assets/images/characters/asha.jpeg',
-                              ),
-                              _FamilyPhoto(
-                                imagePath:
-                                    'assets/images/characters/arun.jpeg',
-                              ),
-                              _FamilyPhoto(
-                                imagePath:
-                                    'assets/images/characters/dadi.jpeg',
+                              const SizedBox(height: 5),
+                              Text(
+                                l10n.peopleVoicesMemories,
+                                style: const TextStyle(
+                                  color:
+                                      AppColors.textMedium,
+                                  fontSize: 16,
+                                  height: 1.35,
+                                ),
                               ),
                             ],
                           ),
                         ),
 
-                        const SizedBox(width: 4),
-
-                        // PLAY BUTTON
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 42,
-                            minHeight: 42,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const FaceNameMatchScreen(),
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.play_circle_fill_rounded,
-                            color: AppColors.primaryGreen,
-                            size: 42,
-                          ),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: AppColors.primaryGreen,
+                          size: 26,
                         ),
                       ],
                     ),
+                  ),
 
-                    const SizedBox(height: 14),
+                  const SizedBox(height: 26),
 
-                    Text(
-                      l10n.memoryActivity,
+                  // REMINDERS
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      l10n.reminders,
                       style: Theme.of(context)
                           .textTheme
-                          .titleMedium
+                          .headlineSmall
                           ?.copyWith(
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
                           ),
                     ),
-
-                    const SizedBox(height: 4),
-
-                    Text(
-                      l10n.matchFamiliarFaces,
-                      style: const TextStyle(
-                        color: AppColors.textMedium,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              // --------------------------------------------------
-              // MEMORY CIRCLE
-              // --------------------------------------------------
-              AppCard(
-                color: Colors.white,
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3B6C4),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.people_alt_rounded,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.memoryCircle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.peopleVoicesMemories,
-                            style: const TextStyle(
-                              color: AppColors.textMedium,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    IconButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const MemoryCircleScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: AppColors.primaryGreen,
-                        size: 28,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              // --------------------------------------------------
-              // REMINDERS
-              // --------------------------------------------------
-              Text(
-                l10n.reminders,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-
-              const SizedBox(height: 12),
-
-              ...FakeReminderData.reminders.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _ReminderCard(
-                    reminder: r,
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 12),
-            ],
+                  const SizedBox(height: 12),
+
+                  ...FakeReminderData.reminders.map(
+                    (reminder) => Padding(
+                      padding:
+                          const EdgeInsets.only(bottom: 12),
+                      child: _ReminderCard(
+                        reminder: reminder,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
 
-      // --------------------------------------------------
       // BOTTOM NAVIGATION
-      // --------------------------------------------------
       bottomNavigationBar: _buildBottomNav(
         context,
         l10n,
@@ -248,36 +388,38 @@ class PatientHomeScreen extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // BOTTOM NAVIGATION
-  // ============================================================
-
   Widget _buildBottomNav(
     BuildContext context,
     AppLocalizations l10n,
   ) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 10,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.96),
+          border: const Border(
+            top: BorderSide(
+              color: AppColors.border,
+            ),
+          ),
         ),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           mainAxisAlignment:
               MainAxisAlignment.spaceEvenly,
           children: [
             _NavItem(
-              icon: Icons.home,
+              icon: Icons.home_rounded,
               label: l10n.home,
               active: true,
               onTap: () {},
             ),
-
             _NavItem(
-              icon: Icons.mic,
+              icon: Icons.mic_rounded,
               label: l10n.voice,
               active: false,
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(
                   SnackBar(
                     content: Text(
                       l10n.voiceAssistantComingSoon,
@@ -286,9 +428,8 @@ class PatientHomeScreen extends StatelessWidget {
                 );
               },
             ),
-
             _NavItem(
-              icon: Icons.settings,
+              icon: Icons.settings_rounded,
               label: l10n.settings,
               active: false,
               onTap: () {
@@ -308,47 +449,86 @@ class PatientHomeScreen extends StatelessWidget {
 }
 
 // ============================================================
-// FAMILY PHOTO
+// QUICK REMINDER CARD
 // ============================================================
 
-class _FamilyPhoto extends StatelessWidget {
-  final String imagePath;
+class _QuickReminderCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
 
-  const _FamilyPhoto({
-    required this.imagePath,
+  const _QuickReminderCard({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 42,
-      height: 42,
+      constraints: const BoxConstraints(
+        minHeight: 112,
+      ),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: Colors.white,
-          width: 2,
+          color: AppColors.border,
+          width: 1.3,
         ),
       ),
-      child: ClipOval(
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.cover,
-          errorBuilder: (
-            context,
-            error,
-            stackTrace,
-          ) {
-            return Container(
-              color: AppColors.border,
-              child: const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 22,
-              ),
-            );
-          },
-        ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: iconColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          Expanded(
+            child: Column(
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -368,6 +548,7 @@ class _ReminderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      color: Colors.white.withValues(alpha: 0.95),
       child: Row(
         children: [
           CircleAvatar(
@@ -384,12 +565,16 @@ class _ReminderCard extends StatelessWidget {
           Expanded(
             child: Text(
               reminder.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
+
+          const SizedBox(width: 10),
 
           Text(
             reminder.time,
@@ -429,22 +614,33 @@ class _NavItem extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: color,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 22,
+          vertical: 4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
               color: color,
-              fontSize: 13,
+              size: 30,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: active
+                    ? FontWeight.w600
+                    : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/state/app_settings_controller.dart';
@@ -31,15 +32,28 @@ class PatientSettingsScreen extends StatelessWidget {
                         'YaadSaathi Voice Mode',
                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                       ),
-                      CircleAvatar(
-                        backgroundColor: AppColors.background,
-                        child: IconButton(
-                          icon: const Icon(Icons.volume_up_rounded, color: AppColors.primaryGreen),
-                          onPressed: () {
-                            // Wire to your TTS/read-aloud service here.
-                          },
-                        ),
-                      ),
+                     
+                       CircleAvatar(
+  backgroundColor: AppColors.background,
+  child: IconButton(
+    icon: const Icon(
+      Icons.volume_up_rounded,
+      color: AppColors.primaryGreen,
+    ),
+    onPressed: () async {
+      final tts = FlutterTts();
+
+      await tts.setSpeechRate(
+        appSettings.speechRate,
+      );
+
+      await tts.speak(
+        'Welcome to YaadSaathi settings. '
+        'You can change text size, display, and voice speed here.',
+      );
+    },
+  ),
+),
                     ],
                   ),
                   const SizedBox(height: 8),
