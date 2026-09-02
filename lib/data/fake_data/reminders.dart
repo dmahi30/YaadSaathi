@@ -1,16 +1,21 @@
+import 'package:flutter/material.dart';
 import '../models/reminder.dart';
 
-final List<Reminder> fakeReminders = [
-  Reminder(
-    id: 'r1',
-    title: 'Take your medicine',
-    type: ReminderType.medicine,
-    time: '9:00 AM',
-  ),
-  Reminder(
-    id: 'r2',
-    title: 'Drink a glass of water',
-    type: ReminderType.water,
-    time: '11:00 AM',
-  ),
-];
+class FakeReminderData {
+  FakeReminderData._();
+
+  static const List<Reminder> reminders = [
+    Reminder(
+      title: 'Medicine',
+      time: '8:00 AM',
+      icon: Icons.medication,
+      color: Color(0xFFF3B6C4),
+    ),
+    Reminder(
+      title: 'Water',
+      time: '10:00 AM',
+      icon: Icons.water_drop,
+      color: Color(0xFFA8D0E6),
+    ),
+  ];
+}

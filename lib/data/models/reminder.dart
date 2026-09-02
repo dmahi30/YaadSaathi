@@ -1,15 +1,15 @@
-enum ReminderType { medicine, water, other }
+import 'package:flutter/material.dart';
 
 class Reminder {
-  final String id;
   final String title;
-  final ReminderType type;
-  final String time; // e.g. "9:00 AM"
+  final String time;
+  final IconData icon;
+  final Color color;
 
   const Reminder({
-    required this.id,
     required this.title,
-    required this.type,
     required this.time,
+    required this.icon,
+    required this.color,
   });
 }

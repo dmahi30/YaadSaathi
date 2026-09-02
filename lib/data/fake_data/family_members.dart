@@ -1,43 +1,51 @@
+import 'package:flutter/material.dart';
 import '../models/family_member.dart';
 
-final List<FamilyMember> fakeFamilyMembers = [
-  FamilyMember(
-    id: '1',
-    name: 'Meera',
-    relation: 'Daughter',
-    photoUrl: 'assets/images/characters/meera.jpeg',
-    voiceLineText: "Hi Amma, it's Meera, your daughter.",
-  ),
+class FakeFamilyData {
+  FakeFamilyData._();
 
-  FamilyMember(
-    id: '2',
-    name: 'Rahul',
-    relation: 'Son',
-    photoUrl: 'assets/images/characters/rahul.jpeg',
-    voiceLineText: "Hey, it's Rahul, your son.",
-  ),
+  static const String _basePath = 'assets/images/characters';
 
-  FamilyMember(
-    id: '3',
-    name: 'Asha',
-    relation: 'Sister',
-    photoUrl: 'assets/images/characters/asha.jpeg',
-    voiceLineText: "Hi, it's Asha, your sister.",
-  ),
-
-  FamilyMember(
-    id: '4',
-    name: 'Uncle Arun',
-    relation: 'Brother',
-    photoUrl: 'assets/images/characters/arun.jpeg',
-    voiceLineText: "Hello, it's Arun, your brother.",
-  ),
-
-  FamilyMember(
-    id: '5',
-    name: 'Dadi (Mother)',
-    relation: 'Mother',
-    photoUrl: 'assets/images/characters/dadi.jpeg',
-    voiceLineText: "It's Amma, your mother.",
-  ),
-];
+  static const List<FamilyMember> members = [
+    FamilyMember(
+      id: 'meera',
+      name: 'Meera',
+      relation: 'Daughter',
+      avatarColor: Color(0xFFF3B6C4),
+      imagePath: '$_basePath/meera.jpeg',
+      voiceText: "Yes! That's Meera, your daughter.",
+    ),
+    FamilyMember(
+      id: 'rahul',
+      name: 'Rahul',
+      relation: 'Son',
+      avatarColor: Color(0xFFA8D0E6),
+      imagePath: '$_basePath/rahul.jpeg',
+      voiceText: "Yes! That's Rahul, your son.",
+    ),
+    FamilyMember(
+      id: 'asha',
+      name: 'Asha',
+      relation: 'Granddaughter',
+      avatarColor: Color(0xFFFFD9A0),
+      imagePath: '$_basePath/asha.jpeg',
+      voiceText: "Yes! That's Asha, your granddaughter.",
+    ),
+    FamilyMember(
+      id: 'arun',
+      name: 'Arun',
+      relation: 'Son',
+      avatarColor: Color(0xFFC8E6C9),
+      imagePath: '$_basePath/arun.jpeg',
+      voiceText: "Yes! That's Arun, your son.",
+    ),
+    FamilyMember(
+      id: 'dadi',
+      name: 'Dadi',
+      relation: 'Grandmother',
+      avatarColor: Color(0xFFD8BFD8),
+      imagePath: '$_basePath/dadi.jpeg',
+      voiceText: "Yes! That's Dadi.",
+    ),
+  ];
+}
