@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
+
+import '../../../core/localization/app_language_controller.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../data/fake_data/reminders.dart';
 import '../../../data/models/reminder.dart';
@@ -13,6 +16,9 @@ class PatientHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final language = AppLanguageController.instance.language;
+    final l10n = AppLocalizations.of(language);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -25,14 +31,14 @@ class PatientHomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Good Morning, Leima! 🌸',
+                '${l10n.goodMorning}, Leima! 🌸',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
 
               const SizedBox(height: 20),
 
               Text(
-                "Today's Memory Activities",
+                l10n.memoryActivity,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
 
@@ -65,13 +71,15 @@ class PatientHomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Memory Activity',
-                            style: Theme.of(context).textTheme.titleMedium,
+                            l10n.memoryActivity,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium,
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Match familiar faces and names',
-                            style: TextStyle(
+                          Text(
+                            l10n.matchFamiliarFaces,
+                            style: const TextStyle(
                               color: AppColors.textMedium,
                               fontSize: 14,
                             ),
@@ -86,7 +94,8 @@ class PatientHomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const FaceNameMatchScreen(),
+                            builder: (_) =>
+                                const FaceNameMatchScreen(),
                           ),
                         );
                       },
@@ -129,13 +138,15 @@ class PatientHomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Memory Circle',
-                            style: Theme.of(context).textTheme.titleMedium,
+                            l10n.memoryCircle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium,
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'People, voices and memories',
-                            style: TextStyle(
+                          Text(
+                            l10n.peopleVoicesMemories,
+                            style: const TextStyle(
                               color: AppColors.textMedium,
                               fontSize: 14,
                             ),
@@ -150,7 +161,8 @@ class PatientHomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const MemoryCircleScreen(),
+                            builder: (_) =>
+                                const MemoryCircleScreen(),
                           ),
                         );
                       },
@@ -168,7 +180,7 @@ class PatientHomeScreen extends StatelessWidget {
 
               // REMINDERS
               Text(
-                'Reminders',
+                l10n.reminders,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
 
@@ -187,11 +199,14 @@ class PatientHomeScreen extends StatelessWidget {
         ),
       ),
 
-      bottomNavigationBar: _buildBottomNav(context),
+      bottomNavigationBar: _buildBottomNav(context, l10n),
     );
   }
 
-  Widget _buildBottomNav(BuildContext context) {
+  Widget _buildBottomNav(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -200,30 +215,31 @@ class PatientHomeScreen extends StatelessWidget {
           children: [
             _NavItem(
               icon: Icons.home,
-              label: 'Home',
+              label: l10n.home,
               active: true,
               onTap: () {},
             ),
 
             _NavItem(
               icon: Icons.mic,
-              label: 'Voice',
+              label: l10n.voice,
               active: false,
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Voice Assistant — coming soon'),
+                SnackBar(
+                  content: Text(l10n.voiceAssistantComingSoon),
                 ),
               ),
             ),
 
             _NavItem(
               icon: Icons.settings,
-              label: 'Settings',
+              label: l10n.settings,
               active: false,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const PatientSettingsScreen(),
+                    builder: (_) =>
+                        const PatientSettingsScreen(),
                   ),
                 );
               },

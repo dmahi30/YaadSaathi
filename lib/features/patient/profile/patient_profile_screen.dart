@@ -1,3 +1,6 @@
+import '../../../core/localization/app_language.dart';
+import '../../../core/localization/app_language_controller.dart';
+import '../../../core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_button.dart';
@@ -13,31 +16,25 @@ class PatientProfileScreen extends StatefulWidget {
 }
 
 class _PatientProfileScreenState extends State<PatientProfileScreen> {
-  static const String _speech =
-      "Let's set up Leima's profile. This helps make the app personal and easy.";
+   
 
   static const List<String> _monthAbbr = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
 
-  static const List<String> _languageOptions = [
-    'English',
-    'हिंदी (Hindi)',
-    'मराठी (Marathi)',
-    'বাংলা (Bengali)',
-    'অসমীয়া (Assamese)',
-  ];
+  
 
   late final TextEditingController _nameController;
   DateTime _dob = DateTime(1952, 8, 15);
-  String _language = 'অসমীয়া (Assamese)';
+ late AppLanguage _language;
 
   @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: 'Leima Devi');
-  }
+void initState() {
+  super.initState();
+  _nameController = TextEditingController(text: 'Leima Devi');
+  _language = AppLanguageController.instance.language;
+}
 
   @override
   void dispose() {
@@ -59,54 +56,71 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     }
   }
 
-  void _pickLanguage() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: _languageOptions.map((lang) {
-                final selected = lang == _language;
-                return ListTile(
-                  title: Text(
-                    lang,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                      color: selected ? AppColors.primaryGreen : AppColors.textDark,
-                    ),
+   
+                
+ void _pickLanguage() {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: AppColors.background,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (context) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: AppLanguage.values.map((lang) {
+              final selected = lang == _language;
+
+              return ListTile(
+                title: Text(
+                  lang.nativeName,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight:
+                        selected ? FontWeight.bold : FontWeight.normal,
+                    color: selected
+                        ? AppColors.primaryGreen
+                        : AppColors.textDark,
                   ),
-                  trailing: selected
-                      ? const Icon(Icons.check_circle, color: AppColors.primaryGreen)
-                      : null,
-                  onTap: () {
-                    setState(() => _language = lang);
-                    Navigator.of(context).pop();
-                  },
-                );
-              }).toList(),
-            ),
+                ),
+                trailing: selected
+                    ? const Icon(
+                        Icons.check_circle,
+                        color: AppColors.primaryGreen,
+                      )
+                    : null,
+                onTap: () {
+                  setState(() => _language = lang);
+                  AppLanguageController.instance.setLanguage(lang);
+                  Navigator.of(context).pop();
+                },
+              );
+            }).toList(),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   void _onPhotoTap() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Photo upload coming soon')),
+    final l10n = AppLocalizations.of(_language);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(l10n.photoUploadComingSoon)
+     ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(_language);
+final speechText =
+    '${l10n.setupProfileTitle}. ${l10n.setupProfileDescription}';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -121,32 +135,32 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                     icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
                   ),
                   const Spacer(),
-                  const SpeakerButton(text: _speech, size: 44),
+                  SpeakerButton(text: speechText,size: 44,),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
-                "Let's set up\nLeima's profile",
+                 l10n.setupProfileTitle,
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               Text(
-                'This helps make the app\npersonal and easy.',
+               l10n.setupProfileDescription,
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 28),
               _buildAvatar(),
               const SizedBox(height: 28),
-              _buildNameField(),
+              _buildNameField(l10n),
               const SizedBox(height: 16),
-              _buildDateField(),
+              _buildDateField(l10n),
               const SizedBox(height: 16),
-              _buildLanguageField(),
+              _buildLanguageField(l10n),
               const SizedBox(height: 28),
               AppButton(
-                label: 'Continue',
+                label:  l10n.continueText,
                 onPressed: () {
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const PatientHomeScreen()),
@@ -203,12 +217,18 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  Widget _buildNameField() {
+  Widget _buildNameField(AppLocalizations l10n) {
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Name', style: TextStyle(color: AppColors.textMedium, fontSize: 14)),
+         Text(
+  l10n.name,
+  style: const TextStyle(
+    color: AppColors.textMedium,
+    fontSize: 14,
+  ),
+),
           const SizedBox(height: 6),
           TextField(
             controller: _nameController,
@@ -228,14 +248,19 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  Widget _buildDateField() {
+  Widget _buildDateField(AppLocalizations l10n) {
     return AppCard(
       onTap: _pickDate,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Date of Birth',
-              style: TextStyle(color: AppColors.textMedium, fontSize: 14)),
+         Text(
+  l10n.dateOfBirth,
+  style: const TextStyle(
+    color: AppColors.textMedium,
+    fontSize: 14,
+  ),
+),
           const SizedBox(height: 6),
           Row(
             children: [
@@ -257,20 +282,25 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  Widget _buildLanguageField() {
+  Widget _buildLanguageField(AppLocalizations l10n) {
     return AppCard(
       onTap: _pickLanguage,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Preferred Language',
-              style: TextStyle(color: AppColors.textMedium, fontSize: 14)),
+         Text(
+  l10n.preferredLanguage,
+  style: const TextStyle(
+    color: AppColors.textMedium,
+    fontSize: 14,
+  ),
+),
           const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  _language,
+                  _language.nativeName,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
