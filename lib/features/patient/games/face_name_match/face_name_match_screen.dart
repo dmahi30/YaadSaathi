@@ -96,30 +96,35 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final language = AppLanguageController.instance.language;
-    final l10n = AppLocalizations.of(language);
+    return ListenableBuilder(
+      listenable: AppLanguageController.instance,
+      builder: (context, _) {
+        final language = AppLanguageController.instance.language;
+        final l10n = AppLocalizations.of(language);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 12,
-          ),
-          child: Column(
-            children: [
-              _buildTopBar(),
-              const SizedBox(height: 24),
-              Expanded(
-                child: _showFeedback
-                    ? _buildCorrectFeedback(l10n)
-                    : _buildQuestion(l10n),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
               ),
-            ],
+              child: Column(
+                children: [
+                  _buildTopBar(),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: _showFeedback
+                        ? _buildCorrectFeedback(l10n)
+                        : _buildQuestion(l10n),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
