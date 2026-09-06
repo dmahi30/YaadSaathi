@@ -47,14 +47,18 @@ class _ConsentScreenState extends State<ConsentScreen> {
   }
 
   void _onContinue() {
-    if (!_canContinue) return;
+  if (!_canContinue) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const PatientProfileScreen(),
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => PatientProfileScreen(
+        registrationData: widget.registrationData,
+        termsAccepted: _agreedToTerms,
+        dataUseAccepted: _agreedToDataUse,
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
