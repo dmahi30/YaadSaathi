@@ -6,6 +6,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/speaker_button.dart';
+import '../../../../core/services/sync_service.dart';
 import '../../../../data/models/family_member.dart';
 import '../../../../data/models/game_session.dart';
 import '../../result/activity_result_screen.dart';
@@ -44,33 +45,20 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
   }
 
   void _onOptionTap(FamilyMember tapped) {
-    if (_showFeedback) return;
+  if (_showFeedback) return;
 
-    final correct = _controller.submitAnswer(tapped);
+  final correct = _controller.submitAnswer(tapped);
 
-    if (correct) {
-      setState(() {
-        _showFeedback = true;
-      });
-    } else {
-      final language = AppLanguageController.instance.language;
-      final l10n = AppLocalizations.of(language);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${l10n.wrong} — ${l10n.tryAgain} 💚',
-          ),
-          backgroundColor: AppColors.warning,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      _controller.resetSelection();
-    }
+  if (correct) {
+    setState(() {
+      _showFeedback = true;
+    });
+  } else {
+    _onNext();
   }
+}
 
-  void _onNext() {
+  Future<void> _onNext() async {
     final hasMore = _controller.nextQuestion();
 
     setState(() {
@@ -78,13 +66,21 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
     });
 
     if (!hasMore) {
-      final session = GameSession(
-        totalQuestions: _controller.totalCount,
-        correctAnswers: _controller.correctCount,
-        completedAt: DateTime.now(),
-      );
+  final session = GameSession(
+    totalQuestions: _controller.totalCount,
+    correctAnswers: _controller.correctCount,
+    completedAt: DateTime.now(),
+  );
 
-      Navigator.of(context).pushReplacement(
+  await SyncService.saveGameSession(
+    patientId: 'patient_001',
+    gameType: 'face_name_match',
+    session: session,
+  );
+
+  if (!mounted) return;
+
+  Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => ActivityResultScreen(
             session: session,

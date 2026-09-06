@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "474736990075",
+    "project_id": "yaadsaathi-2007",
+    "storage_bucket": "yaadsaathi-2007.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:474736990075:android:0d65311549045730758fde",
+        "android_client_info": {
+          "package_name": "com.example.yaadsaathi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4mfCjEQ4TsUXtZ1wvZiMnUQPx4xnfLWI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
