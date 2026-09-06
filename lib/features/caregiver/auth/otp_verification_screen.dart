@@ -1,18 +1,30 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/speaker_button.dart';
 import 'caregiver_registration_data.dart';
+import 'caregiver_auth_service.dart';
 import 'create_pin_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final CaregiverRegistrationData registrationData;
+  final String? verificationId;
+  final int? resendToken;
+  final bool alreadyVerified;
 
-  const OtpVerificationScreen({super.key, required this.registrationData});
+  const OtpVerificationScreen({
+  super.key,
+  required this.registrationData,
+  required this.verificationId,
+  required this.resendToken,
+  this.alreadyVerified = false,
+});
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -28,27 +40,107 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   Timer? _timer;
   int _secondsRemaining = _resendSeconds;
   String? _errorText;
+  bool _isVerifying = false;
+  bool _isResending = false;
+  String? _verificationId;
+  int? _resendToken;  
 
   @override
-  void initState() {
-    super.initState();
-    _controllers = List.generate(_otpLength, (_) => TextEditingController());
-    _focusNodes = List.generate(_otpLength, (_) => FocusNode());
-    _startResendTimer();
-  }
+void initState() {
+  super.initState();
 
-  void _startResendTimer() {
-    _timer?.cancel();
-    setState(() => _secondsRemaining = _resendSeconds);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsRemaining <= 1) {
-        timer.cancel();
-        setState(() => _secondsRemaining = 0);
-      } else {
-        setState(() => _secondsRemaining--);
-      }
+  _controllers = List.generate(
+    _otpLength,
+    (_) => TextEditingController(),
+  );
+
+  _focusNodes = List.generate(
+    _otpLength,
+    (_) => FocusNode(),
+  );
+
+  _verificationId = widget.verificationId;
+  _resendToken = widget.resendToken;
+
+  _startResendTimer();
+}
+
+Future<void> _resendOtp() async {
+  if (_isResending) return;
+
+  setState(() {
+    _isResending = true;
+    _errorText = null;
+  });
+
+  try {
+    await CaregiverAuthService.instance.sendOtp(
+      phoneNumber: widget.registrationData.phoneNumber,
+      forceResendingToken: _resendToken,
+      onCodeSent: (verificationId, resendToken) {
+        if (!mounted) return;
+
+        setState(() {
+          _verificationId = verificationId;
+          _resendToken = resendToken;
+          _isResending = false;
+        });
+
+        for (final controller in _controllers) {
+          controller.clear();
+        }
+
+        _focusNodes.first.requestFocus();
+        _startResendTimer();
+      },
+      onVerificationFailed: (FirebaseAuthException error) {
+        if (!mounted) return;
+
+        setState(() {
+          _isResending = false;
+          _errorText =
+              error.message ?? 'Could not resend OTP. Please try again.';
+        });
+      },
+      onVerificationCompleted: (PhoneAuthCredential credential) {
+        if (!mounted) return;
+
+        setState(() {
+          _isResending = false;
+        });
+      },
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      _isResending = false;
+      _errorText = 'Could not resend OTP. Please try again.';
     });
   }
+}
+
+ void _startResendTimer() {
+  _timer?.cancel();
+
+  if (!mounted) return;
+
+  setState(() => _secondsRemaining = _resendSeconds);
+
+  _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (!mounted) {
+      timer.cancel();
+      return;
+    }
+
+    if (_secondsRemaining <= 1) {
+      timer.cancel();
+      setState(() => _secondsRemaining = 0);
+    } else {
+      setState(() => _secondsRemaining--);
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -71,32 +163,78 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
-    setState(() => _errorText = null);
+    if (mounted) {
+      setState(() => _errorText = null);
+    }
   }
 
-  void _onVerify(AppLocalizations l10n) {
-    if (_enteredCode.length < _otpLength) {
-      setState(() => _errorText = l10n.otpIncomplete);
-      return;
-    }
+ Future<void> _onVerify(AppLocalizations l10n) async {
+  if (_enteredCode.length < _otpLength) {
+    setState(() => _errorText = l10n.otpIncomplete);
+    return;
+  }
 
-    // ---------------------------------------------------------------
-    // PROTOTYPE NOTE: there is no backend/SMS gateway connected yet.
-    // Any complete 6-digit entry is accepted here so the flow can be
-    // demonstrated end-to-end. This is clearly isolated to this one
-    // check and is not presented to the user as real verification —
-    // see the demo notice shown on screen below.
-    //
-    // Replace this block with a real API call, e.g.:
-    //   final verified = await authService.verifyOtp(phone, code);
-    //   if (!verified) { setState(() => _errorText = ...); return; }
-    // ---------------------------------------------------------------
+  void goToCreatePin() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => CreatePinScreen(registrationData: widget.registrationData),
+        builder: (_) => CreatePinScreen(
+          registrationData: widget.registrationData,
+        ),
       ),
     );
   }
+
+  if (widget.alreadyVerified) {
+    goToCreatePin();
+    return;
+  }
+
+  if (_verificationId == null || _verificationId!.isEmpty) {
+    setState(() {
+      _errorText = 'OTP session expired. Please resend the OTP.';
+    });
+    return;
+  }
+
+  if (_isVerifying) return;
+
+  setState(() {
+    _isVerifying = true;
+    _errorText = null;
+  });
+
+  try {
+    await CaregiverAuthService.instance.verifyOtp(
+      verificationId: _verificationId!,
+      smsCode: _enteredCode,
+    );
+
+    if (!mounted) return;
+
+    goToCreatePin();
+  } on FirebaseAuthException catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      _isVerifying = false;
+
+      if (e.code == 'invalid-verification-code') {
+        _errorText = 'The OTP is incorrect. Please try again.';
+      } else if (e.code == 'session-expired') {
+        _errorText = 'The OTP has expired. Please resend a new OTP.';
+      } else {
+        _errorText = e.message ?? 'OTP verification failed. Please try again.';
+      }
+    });
+  } catch (_) {
+    if (!mounted) return;
+
+    setState(() {
+      _isVerifying = false;
+      _errorText = 'Something went wrong. Please try again.';
+    });
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -217,10 +355,22 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: Text(
-                        l10n.verify,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                      ),
+                      child: _isVerifying
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              l10n.verify,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -233,7 +383,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   TextButton(
-                    onPressed: _secondsRemaining == 0 ? _startResendTimer : null,
+                    onPressed: _secondsRemaining == 0 && !_isResending
+                        ? _resendOtp
+                        : null,
                     child: Text(
                       l10n.resendOtp,
                       style: const TextStyle(
@@ -243,16 +395,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.otpDemoNotice,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey,
-                    ),
-                  ),
+                  
                 ],
               ),
             ),

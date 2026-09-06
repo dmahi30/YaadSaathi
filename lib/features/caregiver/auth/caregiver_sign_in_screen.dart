@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../dashboard/caregiver_dashboard_screen.dart';
+import 'caregiver_auth_service.dart';
 import 'caregiver_registration_screen.dart';
 import 'sign_in_otp_screen.dart';
 
@@ -43,41 +44,76 @@ class _CaregiverSignInScreenState extends State<CaregiverSignInScreen> {
 
     FocusScope.of(context).unfocus();
 
+    final phoneNumber = _phoneController.text.trim();
+    final pin = _pinController.text.trim();
+
     setState(() {
       _isSigningIn = true;
     });
 
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      await CaregiverAuthService.instance.sendOtp(
+        phoneNumber: phoneNumber,
+        onCodeSent: (verificationId, resendToken) {
+          if (!mounted) return;
 
-    if (!mounted) return;
+          setState(() {
+            _isSigningIn = false;
+          });
 
-    setState(() {
-      _isSigningIn = false;
-    });
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => SignInOtpScreen(
+                phoneNumber: phoneNumber,
+                pin: pin,
+                verificationId: verificationId,
+                resendToken: resendToken,
+              ),
+            ),
+          );
+        },
+        onVerificationFailed: (FirebaseAuthException error) {
+          if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sign in successful'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+          setState(() {
+            _isSigningIn = false;
+          });
 
-    await Future.delayed(const Duration(milliseconds: 700));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                error.message ?? 'Could not send OTP. Please try again.',
+              ),
+            ),
+          );
+        },
+        onVerificationCompleted: (PhoneAuthCredential credential) async {
+          // Keep the normal OTP screen flow.
+          // PIN verification still needs to happen after authentication.
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
 
-    if (!mounted) return;
+      setState(() {
+        _isSigningIn = false;
+      });
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => const CaregiverDashboardScreen(),
-      ),
-      (route) => false,
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not start sign in. Please try again.',
+          ),
+        ),
+      );
+    }
   }
 
-  void _verifyWithOtp(AppLocalizations l10n) {
+  Future<void> _verifyWithOtp(AppLocalizations l10n) async {
     FocusScope.of(context).unfocus();
 
     final phoneNumber = _phoneController.text.trim();
+    final pin = _pinController.text.trim();
 
     if (phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,13 +124,76 @@ class _CaregiverSignInScreenState extends State<CaregiverSignInScreen> {
       return;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SignInOtpScreen(
-          phoneNumber: phoneNumber,
+    if (pin.length != 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your 4-digit PIN.'),
         ),
-      ),
-    );
+      );
+      return;
+    }
+
+    if (_isSigningIn) return;
+
+    setState(() {
+      _isSigningIn = true;
+    });
+
+    try {
+      await CaregiverAuthService.instance.sendOtp(
+        phoneNumber: phoneNumber,
+        onCodeSent: (verificationId, resendToken) {
+          if (!mounted) return;
+
+          setState(() {
+            _isSigningIn = false;
+          });
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => SignInOtpScreen(
+                phoneNumber: phoneNumber,
+                pin: pin,
+                verificationId: verificationId,
+                resendToken: resendToken,
+              ),
+            ),
+          );
+        },
+        onVerificationFailed: (FirebaseAuthException error) {
+          if (!mounted) return;
+
+          setState(() {
+            _isSigningIn = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                error.message ?? 'Could not send OTP. Please try again.',
+              ),
+            ),
+          );
+        },
+        onVerificationCompleted: (PhoneAuthCredential credential) async {
+          // Keep the normal OTP screen flow.
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isSigningIn = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not start verification. Please try again.',
+          ),
+        ),
+      );
+    }
   }
 
   @override

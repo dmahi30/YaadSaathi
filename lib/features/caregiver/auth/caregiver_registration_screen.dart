@@ -2,12 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_language.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/speaker_button.dart';
+import 'caregiver_auth_service.dart';
 import 'caregiver_registration_data.dart';
 import 'otp_verification_screen.dart';
 
@@ -70,25 +73,91 @@ class _CaregiverRegistrationScreenState
     });
   }
 
-  void _continue() {
-    if (!_canContinue) return;
+  Future<void> _continue() async {
+  if (!_canContinue) return;
 
-    final data = CaregiverRegistrationData(
-      fullName: _nameController.text.trim(),
-      phoneNumber: _phoneController.text.trim(),
-      relationshipKey: _selectedRelationship!,
-      preferredLanguage: _selectedLanguage!,
-      profileImage: _profileImage,
+  FocusScope.of(context).unfocus();
+
+  final data = CaregiverRegistrationData(
+    fullName: _nameController.text.trim(),
+    phoneNumber: _phoneController.text.trim(),
+    relationshipKey: _selectedRelationship!,
+    preferredLanguage: _selectedLanguage!,
+    profileImage: _profileImage,
+  );
+
+  try {
+    await CaregiverAuthService.instance.sendOtp(
+      phoneNumber: data.phoneNumber,
+      onCodeSent: (verificationId, resendToken) {
+        if (!mounted) return;
+
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => OtpVerificationScreen(
+              registrationData: data,
+              verificationId: verificationId,
+              resendToken: resendToken,
+            ),
+          ),
+        );
+      },
+      onVerificationCompleted: (credential) async {
+        try {
+          await CaregiverAuthService.instance.auth
+              .signInWithCredential(credential);
+
+          if (!mounted) return;
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => OtpVerificationScreen(
+                registrationData: data,
+                verificationId: null,
+                resendToken: null,
+                alreadyVerified: true,
+              ),
+            ),
+          );
+        } catch (e) {
+          if (!mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Phone verification failed: $e'),
+            ),
+          );
+        }
+      },
+      onVerificationFailed: (FirebaseAuthException error) {
+        if (!mounted) return;
+
+        String message = 'Could not send OTP.';
+
+        if (error.code == 'invalid-phone-number') {
+          message = 'Please enter a valid phone number.';
+        } else if (error.code == 'too-many-requests') {
+          message = 'Too many attempts. Please try again later.';
+        } else if (error.message != null &&
+            error.message!.trim().isNotEmpty) {
+          message = error.message!;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      },
     );
+  } catch (e) {
+    if (!mounted) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OtpVerificationScreen(
-          registrationData: data,
-        ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Could not start phone verification: $e'),
       ),
     );
   }
+}
 
   Future<void> _showRelationshipPicker(
     AppLocalizations l10n,

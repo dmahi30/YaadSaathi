@@ -1,16 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
+import 'caregiver_auth_service.dart';
 import '../dashboard/caregiver_dashboard_screen.dart';
 
 class SignInOtpScreen extends StatefulWidget {
   final String phoneNumber;
+  final String pin;
+  final String? verificationId;
+  final int? resendToken;
 
   const SignInOtpScreen({
     super.key,
     required this.phoneNumber,
+    required this.pin,
+    required this.verificationId,
+    required this.resendToken,
   });
 
   @override
@@ -24,7 +32,20 @@ class _SignInOtpScreenState extends State<SignInOtpScreen> {
   final List<FocusNode> _focusNodes =
       List.generate(6, (_) => FocusNode());
 
+  String? _verificationId;
+  int? _resendToken;
+
   bool _isVerifying = false;
+  bool _isResending = false;
+  bool _hasNavigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _verificationId = widget.verificationId;
+    _resendToken = widget.resendToken;
+  }
 
   @override
   void dispose() {
@@ -69,37 +90,189 @@ class _SignInOtpScreenState extends State<SignInOtpScreen> {
 
     FocusScope.of(context).unfocus();
 
+    final verificationId = _verificationId;
+
+    if (verificationId == null || verificationId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'OTP session expired. Please request a new OTP.',
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isVerifying = true;
     });
 
-    // Frontend demo verification.
-    // Real OTP verification will be connected with the backend later.
-    await Future.delayed(
-      const Duration(milliseconds: 800),
-    );
+    try {
+      // 1. Verify the real Firebase OTP.
+      await CaregiverAuthService.instance.verifyOtp(
+        verificationId: verificationId,
+        smsCode: _otp,
+      );
 
-    if (!mounted) return;
+      // 2. Firebase authentication succeeded.
+      // Now verify the caregiver's app PIN.
+      final pinCorrect =
+          await CaregiverAuthService.instance.verifyPinForCurrentUser(
+        widget.pin,
+      );
 
-    setState(() {
-      _isVerifying = false;
-    });
+      if (!pinCorrect) {
+        // Do not leave a partially authenticated session active.
+        await FirebaseAuth.instance.signOut();
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => const CaregiverDashboardScreen(),
-      ),
-      (route) => false,
-    );
+        if (!mounted) return;
+
+        setState(() {
+          _isVerifying = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Incorrect PIN. Please check your PIN and try again.',
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      if (!mounted || _hasNavigated) return;
+
+      _hasNavigated = true;
+
+      setState(() {
+        _isVerifying = false;
+      });
+
+      // 3. OTP + PIN both verified → caregiver dashboard.
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const CaregiverDashboardScreen(),
+        ),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isVerifying = false;
+      });
+
+      String message;
+
+      switch (error.code) {
+        case 'invalid-verification-code':
+          message = 'Incorrect OTP. Please check the code and try again.';
+          break;
+
+        case 'session-expired':
+          message = 'OTP expired. Please request a new OTP.';
+          break;
+
+        case 'invalid-credential':
+          message = 'Invalid OTP. Please check the code and try again.';
+          break;
+
+        case 'too-many-requests':
+          message = 'Too many attempts. Please try again later.';
+          break;
+
+        default:
+          message =
+              error.message ?? 'OTP verification failed. Please try again.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isVerifying = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Something went wrong. Please try again.',
+          ),
+        ),
+      );
+    }
   }
 
-  void _resendOtp(AppLocalizations l10n) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.otpDemoNotice),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  Future<void> _resendOtp(AppLocalizations l10n) async {
+    if (_isResending || _isVerifying) return;
+
+    setState(() {
+      _isResending = true;
+    });
+
+    try {
+      await CaregiverAuthService.instance.sendOtp(
+        phoneNumber: widget.phoneNumber,
+        forceResendingToken: _resendToken,
+        onCodeSent: (verificationId, resendToken) {
+          if (!mounted) return;
+
+          setState(() {
+            _verificationId = verificationId;
+            _resendToken = resendToken;
+            _isResending = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'A new OTP has been sent.',
+              ),
+            ),
+          );
+        },
+        onVerificationFailed: (FirebaseAuthException error) {
+          if (!mounted) return;
+
+          setState(() {
+            _isResending = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                error.message ?? 'Could not resend OTP. Please try again.',
+              ),
+            ),
+          );
+        },
+        onVerificationCompleted: (PhoneAuthCredential credential) async {
+          // Automatic verification is intentionally not used here.
+          // The caregiver must still complete the normal OTP + PIN flow.
+        },
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isResending = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not resend OTP. Please try again.',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -290,8 +463,7 @@ class _SignInOtpScreenState extends State<SignInOtpScreen> {
                         foregroundColor: Colors.white,
                         disabledBackgroundColor:
                             AppColors.primaryGreenLight,
-                        disabledForegroundColor:
-                            AppColors.textMedium,
+                        disabledForegroundColor: AppColors.textMedium,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(26),
@@ -317,15 +489,25 @@ class _SignInOtpScreenState extends State<SignInOtpScreen> {
 
                   Center(
                     child: TextButton(
-                      onPressed: () => _resendOtp(l10n),
-                      child: Text(
-                        l10n.resendOtp,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryGreen,
-                        ),
-                      ),
+                      onPressed: _isResending
+                          ? null
+                          : () => _resendOtp(l10n),
+                      child: _isResending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              l10n.resendOtp,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryGreen,
+                              ),
+                            ),
                     ),
                   ),
 
@@ -341,19 +523,19 @@ class _SignInOtpScreenState extends State<SignInOtpScreen> {
                         color: AppColors.border,
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline_rounded,
                           color: AppColors.primaryGreen,
                           size: 24,
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            l10n.otpDemoNotice,
-                            style: const TextStyle(
+                            'Enter the 6-digit verification code sent to your phone number.',
+                            style: TextStyle(
                               fontSize: 14,
                               height: 1.4,
                               color: AppColors.textMedium,

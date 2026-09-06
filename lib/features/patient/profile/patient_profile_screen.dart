@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../caregiver/auth/caregiver_registration_data.dart';
+import '../../caregiver/auth/caregiver_auth_service.dart';
 import '../../../core/localization/app_language.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -11,7 +14,16 @@ import '../../../core/widgets/speaker_button.dart';
 import '../home/patient_home_screen.dart';
 
 class PatientProfileScreen extends StatefulWidget {
-  const PatientProfileScreen({super.key});
+  final CaregiverRegistrationData? registrationData;
+  final bool termsAccepted;
+  final bool dataUseAccepted;
+
+  const PatientProfileScreen({
+    super.key,
+    this.registrationData,
+    this.termsAccepted = false,
+    this.dataUseAccepted = false,
+  });
 
   @override
   State<PatientProfileScreen> createState() =>
@@ -220,9 +232,8 @@ class _PatientProfileScreenState
     );
   }
 
-  void _onContinue() {
-    final name =
-        _nameController.text.trim();
+  Future<void> _onContinue() async {
+    final name = _nameController.text.trim();
 
     if (name.isEmpty || _dob == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -236,15 +247,67 @@ class _PatientProfileScreenState
       return;
     }
 
-    // Save the actual name entered by the user.
-    PatientNameController.instance.setName(name);
+    try {
+      // Save the patient's name locally for the patient UI.
+      PatientNameController.instance.setName(name);
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => const PatientHomeScreen(),
-      ),
-      (route) => false,
-    );
+      // If this screen was reached through caregiver registration,
+      // save the caregiver and patient information to Firestore.
+      final registrationData = widget.registrationData;
+
+      if (registrationData != null) {
+        final pin = registrationData.pin;
+
+        if (pin == null || pin.length != 4) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Caregiver PIN is missing. Please try again.'),
+            ),
+          );
+          return;
+        }
+
+        await CaregiverAuthService.instance.saveCaregiverAndPatient(
+          fullName: registrationData.fullName,
+          phoneNumber: registrationData.phoneNumber,
+          relationshipKey: registrationData.relationshipKey,
+          preferredLanguage: registrationData.preferredLanguage.name,
+          pin: pin,
+          termsAccepted: widget.termsAccepted,
+          dataUseAccepted: widget.dataUseAccepted,
+          patientName: name,
+          patientDob: _dob!,
+          patientLanguage: _language.name,
+        );
+      }
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const PatientHomeScreen(),
+        ),
+        (route) => false,
+      );
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message ?? 'Could not save the profile. Please try again.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save the profile. Please try again.'),
+        ),
+      );
+    }
   }
 
   @override
