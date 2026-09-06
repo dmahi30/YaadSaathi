@@ -1,80 +1,243 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/state/app_settings_controller.dart';
 import '../../../core/localization/app_language.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../caregiver/pin_access/caregiver_pin_screen.dart';
+import '../../../core/services/audio_service.dart';
+import '../../../core/state/app_settings_controller.dart';
+import '../../caregiver/auth/caregiver_auth_screen.dart';
 
 class PatientSettingsScreen extends StatelessWidget {
   const PatientSettingsScreen({super.key});
 
+  String _textSizeLabel(
+    AppLanguage language,
+    String key,
+  ) {
+    final labels = {
+      AppLanguage.english: {
+        'small': 'Small',
+        'medium': 'Medium',
+        'large': 'Large',
+        'extraLarge': 'Extra Large',
+      },
+      AppLanguage.hindi: {
+        'small': 'छोटा',
+        'medium': 'मध्यम',
+        'large': 'बड़ा',
+        'extraLarge': 'बहुत बड़ा',
+      },
+      AppLanguage.marathi: {
+        'small': 'लहान',
+        'medium': 'मध्यम',
+        'large': 'मोठा',
+        'extraLarge': 'खूप मोठा',
+      },
+      AppLanguage.bengali: {
+        'small': 'ছোট',
+        'medium': 'মাঝারি',
+        'large': 'বড়',
+        'extraLarge': 'খুব বড়',
+      },
+      AppLanguage.assamese: {
+        'small': 'সৰু',
+        'medium': 'মধ্যম',
+        'large': 'ডাঙৰ',
+        'extraLarge': 'অতি ডাঙৰ',
+      },
+    };
+
+    return labels[language]![key]!;
+  }
+
+  String _displayLabel(
+    AppLanguage language,
+    String key,
+  ) {
+    final labels = {
+      AppLanguage.english: {
+        'normal': 'Normal',
+        'high': 'High Contrast',
+      },
+      AppLanguage.hindi: {
+        'normal': 'सामान्य',
+        'high': 'उच्च कंट्रास्ट',
+      },
+      AppLanguage.marathi: {
+        'normal': 'सामान्य',
+        'high': 'उच्च कॉन्ट्रास्ट',
+      },
+      AppLanguage.bengali: {
+        'normal': 'স্বাভাবিক',
+        'high': 'উচ্চ কনট্রাস্ট',
+      },
+      AppLanguage.assamese: {
+        'normal': 'সাধাৰণ',
+        'high': 'উচ্চ কনট্ৰাষ্ট',
+      },
+    };
+
+    return labels[language]![key]!;
+  }
+
+  String _voiceLabel(
+    AppLanguage language,
+    String key,
+  ) {
+    final labels = {
+      AppLanguage.english: {
+        'slow': 'Slow',
+        'normal': 'Normal Speed',
+        'fast': 'Fast',
+      },
+      AppLanguage.hindi: {
+        'slow': 'धीमी',
+        'normal': 'सामान्य गति',
+        'fast': 'तेज़',
+      },
+      AppLanguage.marathi: {
+        'slow': 'हळू',
+        'normal': 'सामान्य वेग',
+        'fast': 'जलद',
+      },
+      AppLanguage.bengali: {
+        'slow': 'ধীর',
+        'normal': 'স্বাভাবিক গতি',
+        'fast': 'দ্রুত',
+      },
+      AppLanguage.assamese: {
+        'slow': 'লাহে লাহে',
+        'normal': 'সাধাৰণ গতি',
+        'fast': 'দ্ৰুত',
+      },
+    };
+
+    return labels[language]![key]!;
+  }
+
+  String _canonicalTextSize(
+    String selected,
+    AppLanguage language,
+  ) {
+    final Map<String, String> values = {
+      _textSizeLabel(language, 'small'): 'Small',
+      _textSizeLabel(language, 'medium'): 'Medium',
+      _textSizeLabel(language, 'large'): 'Large',
+      _textSizeLabel(language, 'extraLarge'):
+          'Extra Large',
+    };
+
+    return values[selected] ?? selected;
+  }
+
+  String _localizedTextSizeValue(
+    String canonical,
+    AppLanguage language,
+  ) {
+    switch (canonical) {
+      case 'Small':
+        return _textSizeLabel(
+          language,
+          'small',
+        );
+
+      case 'Large':
+        return _textSizeLabel(
+          language,
+          'large',
+        );
+
+      case 'Extra Large':
+        return _textSizeLabel(
+          language,
+          'extraLarge',
+        );
+
+      case 'Medium':
+      default:
+        return _textSizeLabel(
+          language,
+          'medium',
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: ListenableBuilder(
-          listenable: Listenable.merge([
-            appSettings,
-            AppLanguageController.instance,
-          ]),
-          builder: (context, _) {
-            final l = AppLocalizations.current();
-            final language = AppLanguageController.instance.language;
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        appSettings,
+        AppLanguageController.instance,
+      ]),
+      builder: (context, _) {
+        final language =
+            AppLanguageController.instance.language;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
+        final l10n =
+            AppLocalizations.of(language);
+
+        final textSizeValue =
+            _localizedTextSizeValue(
+          appSettings.textSizeLabel,
+          language,
+        );
+
+        return Scaffold(
+          backgroundColor:
+              AppColors.background,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding:
+                  const EdgeInsets.symmetric(
                 horizontal: 24,
                 vertical: 16,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
-                  // ---------------------------------------------------------
-                  // TOP BAR
-                  // ---------------------------------------------------------
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        onPressed: () => Navigator.of(context).maybePop(),
+                        onPressed: () =>
+                            Navigator.of(context)
+                                .maybePop(),
                         icon: const Icon(
                           Icons.arrow_back,
-                          color: AppColors.primaryGreen,
+                          color:
+                              AppColors.primaryGreen,
                         ),
                       ),
 
                       Text(
-                        'YaadSaathi Voice Mode',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
+                        l10n.appName,
+                        style:
+                            const TextStyle(
+                          fontWeight:
+                              FontWeight.w600,
                           fontSize: 16,
+                          color:
+                              AppColors.textDark,
                         ),
                       ),
 
                       CircleAvatar(
-                        backgroundColor: AppColors.background,
+                        backgroundColor:
+                            AppColors.background,
                         child: IconButton(
                           icon: const Icon(
                             Icons.volume_up_rounded,
-                            color: AppColors.primaryGreen,
+                            color: AppColors
+                                .primaryGreen,
                           ),
-                          onPressed: () async {
-                            final tts = FlutterTts();
-
-                            await tts.setSpeechRate(
-                              appSettings.speechRate,
-                            );
-
-                            await tts.speak(
-                              '${l.settings}. '
-                              '${l.textSize}. '
-                              '${l.display}. '
-                              '${l.voice}. '
-                              '${l.language}.',
+                          onPressed: () {
+                            AudioService().speak(
+                              '${l10n.textSize}, '
+                              '${l10n.display}, '
+                              '${l10n.language}.',
                             );
                           },
                         ),
@@ -84,262 +247,299 @@ class PatientSettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  // ---------------------------------------------------------
-                  // TITLE
-                  // ---------------------------------------------------------
                   Text(
-                    l.settings,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    l10n.settings,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineMedium,
                   ),
 
                   const SizedBox(height: 20),
 
-                  // ---------------------------------------------------------
                   // TEXT SIZE
-                  // ---------------------------------------------------------
                   _SettingsRow(
-                    icon: Icons.text_fields_rounded,
-                    iconBg: const Color(0xFFD7EFC6),
-                    iconColor: AppColors.primaryGreen,
-                    label: l.textSize,
-                    value: _localizedTextSize(
-                      appSettings.textSizeLabel,
-                      language,
-                    ),
-                    onTap: () => _showPicker(
-                      context,
-                      title: l.textSize,
-                      options: const [
-                        'Small',
-                        'Medium',
-                        'Large',
-                        'Extra Large',
-                      ],
-                      current: appSettings.textSizeLabel,
-                      displayOption: (option) =>
-                          _localizedTextSize(option, language),
-                      onSelected: appSettings.setTextSize,
-                    ),
+                    icon:
+                        Icons.text_fields_rounded,
+                    iconBg:
+                        const Color(0xFFD7EFC6),
+                    iconColor:
+                        AppColors.primaryGreen,
+                    label: l10n.textSize,
+                    value: textSizeValue,
+                    onTap: () {
+                      final options = [
+                        _textSizeLabel(
+                          language,
+                          'small',
+                        ),
+                        _textSizeLabel(
+                          language,
+                          'medium',
+                        ),
+                        _textSizeLabel(
+                          language,
+                          'large',
+                        ),
+                        _textSizeLabel(
+                          language,
+                          'extraLarge',
+                        ),
+                      ];
+
+                      _showPicker(
+                        context,
+                        title: l10n.textSize,
+                        options: options,
+                        current: textSizeValue,
+                        onSelected: (selected) {
+                          final canonical =
+                              _canonicalTextSize(
+                            selected,
+                            language,
+                          );
+
+                          // This changes the actual
+                          // global text scale because
+                          // app.dart listens to appSettings.
+                          appSettings.setTextSize(
+                            canonical,
+                          );
+                        },
+                      );
+                    },
                   ),
 
-                  // ---------------------------------------------------------
                   // DISPLAY
-                  // ---------------------------------------------------------
                   _SettingsRow(
-                    icon: Icons.contrast_rounded,
-                    iconBg: const Color(0xFFD6E8F7),
-                    iconColor: const Color(0xFF2B6CB0),
-                    label: l.display,
-                    value: _localizedDisplay(
-                      appSettings.displayLabel,
-                      language,
-                    ),
-                    onTap: () => _showPicker(
-                      context,
-                      title: l.display,
-                      options: const [
-                        'Normal',
-                        'High Contrast',
-                      ],
-                      current: appSettings.displayLabel,
-                      displayOption: (option) =>
-                          _localizedDisplay(option, language),
-                      onSelected: appSettings.setDisplay,
-                    ),
+                    icon:
+                        Icons.contrast_rounded,
+                    iconBg:
+                        const Color(0xFFD6E8F7),
+                    iconColor:
+                        const Color(0xFF2B6CB0),
+                    label: l10n.display,
+                    value: appSettings
+                                .displayLabel ==
+                            'High Contrast'
+                        ? _displayLabel(
+                            language,
+                            'high',
+                          )
+                        : _displayLabel(
+                            language,
+                            'normal',
+                          ),
+                    onTap: () {
+                      final normal =
+                          _displayLabel(
+                        language,
+                        'normal',
+                      );
+
+                      final high =
+                          _displayLabel(
+                        language,
+                        'high',
+                      );
+
+                      _showPicker(
+                        context,
+                        title: l10n.display,
+                        options: [
+                          normal,
+                          high,
+                        ],
+                        current:
+                            appSettings.displayLabel ==
+                                    'High Contrast'
+                                ? high
+                                : normal,
+                        onSelected: (selected) {
+                          appSettings.setDisplay(
+                            selected == high
+                                ? 'High Contrast'
+                                : 'Normal',
+                          );
+                        },
+                      );
+                    },
                   ),
 
-                  // ---------------------------------------------------------
-                  // VOICE
-                  // ---------------------------------------------------------
+                  // VOICE SPEED
                   _SettingsRow(
-                    icon: Icons.volume_up_rounded,
-                    iconBg: const Color(0xFFE3D9F7),
-                    iconColor: const Color(0xFF6B46C1),
-                    label: l.voice,
-                    value: _localizedVoiceSpeed(
+                    icon:
+                        Icons.volume_up_rounded,
+                    iconBg:
+                        const Color(0xFFE3D9F7),
+                    iconColor:
+                        const Color(0xFF6B46C1),
+                    label: l10n.voice,
+                    value: _localizedVoiceValue(
                       appSettings.voiceSpeedLabel,
                       language,
                     ),
-                    onTap: () => _showPicker(
-                      context,
-                      title: l.voice,
-                      options: const [
-                        'Slow',
-                        'Normal Speed',
-                        'Fast',
-                      ],
-                      current: appSettings.voiceSpeedLabel,
-                      displayOption: (option) =>
-                          _localizedVoiceSpeed(option, language),
-                      onSelected: appSettings.setVoiceSpeed,
-                    ),
-                  ),
-
-                  // ---------------------------------------------------------
-                  // LANGUAGE
-                  // ---------------------------------------------------------
-                  _SettingsRow(
-                    icon: Icons.language_rounded,
-                    iconBg: const Color(0xFFD7EFC6),
-                    iconColor: AppColors.primaryGreen,
-                    label: l.language,
-                    value: language.nativeName,
-                    onTap: () => _showLanguagePicker(
-                      context,
-                      currentLanguage: language,
-                    ),
-                  ),
-
-                  // ---------------------------------------------------------
-                  // CAREGIVER ACCESS
-                  // ---------------------------------------------------------
-                  _SettingsRow(
-                    icon: Icons.lock_open_rounded,
-                    iconBg: const Color(0xFFFCEBBF),
-                    iconColor: const Color(0xFFB7791F),
-                    label: l.caregiverAccess,
-                    value: 'Front-Pin',
                     onTap: () {
-                      Navigator.of(context).push(
+                      final slow =
+                          _voiceLabel(
+                        language,
+                        'slow',
+                      );
+
+                      final normal =
+                          _voiceLabel(
+                        language,
+                        'normal',
+                      );
+
+                      final fast =
+                          _voiceLabel(
+                        language,
+                        'fast',
+                      );
+
+                      _showPicker(
+                        context,
+                        title: l10n.voice,
+                        options: [
+                          slow,
+                          normal,
+                          fast,
+                        ],
+                        current:
+                            _localizedVoiceValue(
+                          appSettings
+                              .voiceSpeedLabel,
+                          language,
+                        ),
+                        onSelected: (selected) {
+                          if (selected == slow) {
+                            appSettings
+                                .setVoiceSpeed(
+                              'Slow',
+                            );
+                          } else if (selected ==
+                              fast) {
+                            appSettings
+                                .setVoiceSpeed(
+                              'Fast',
+                            );
+                          } else {
+                            appSettings
+                                .setVoiceSpeed(
+                              'Normal Speed',
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
+
+                  // LANGUAGE — EXACTLY 5
+                  _SettingsRow(
+                    icon:
+                        Icons.language_rounded,
+                    iconBg:
+                        const Color(0xFFD7EFC6),
+                    iconColor:
+                        AppColors.primaryGreen,
+                    label: l10n.language,
+                    value: language.nativeName,
+                    onTap: () {
+                      _showLanguagePicker(
+                        context,
+                        language,
+                      );
+                    },
+                  ),
+
+                  // CAREGIVER ACCESS
+                  _SettingsRow(
+                    icon:
+                        Icons.lock_open_rounded,
+                    iconBg:
+                        const Color(0xFFFCEBBF),
+                    iconColor:
+                        const Color(0xFFB7791F),
+                    label:
+                        l10n.caregiverAccess,
+                    value: '',
+                    onTap: () {
+                      Navigator.of(context)
+                          .push(
                         MaterialPageRoute(
-                          builder: (_) => const CaregiverPinScreen(),
+                          builder: (_) =>
+                              const CaregiverAuthScreen(),
                         ),
                       );
                     },
                   ),
 
-                  // ---------------------------------------------------------
                   // CALL CAREGIVER
-                  // ---------------------------------------------------------
                   _SettingsRow(
                     icon: Icons.call_rounded,
-                    iconBg: const Color(0xFFF7D9DC),
-                    iconColor: const Color(0xFFC53030),
-                    label: l.callCaregiver,
-                    value: 'Mohan',
-                    onTap: () => _showCallDialog(
-                      context,
-                      'Mohan',
-                      language,
-                    ),
+                    iconBg:
+                        const Color(0xFFF7D9DC),
+                    iconColor:
+                        const Color(0xFFC53030),
+                    label:
+                        l10n.callCaregiver,
+                    value: '',
+                    onTap: () {
+                      _showInfoDialog(
+                        context,
+                        title:
+                            l10n.callCaregiver,
+                        body:
+                            l10n.callCaregiver,
+                      );
+                    },
                   ),
 
-                  // ---------------------------------------------------------
                   // PRIVACY & HELP
-                  // ---------------------------------------------------------
                   _SettingsRow(
-                    icon: Icons.help_outline_rounded,
-                    iconBg: const Color(0xFFE3D9F7),
-                    iconColor: const Color(0xFF6B46C1),
-                    label: l.privacyHelp,
+                    icon:
+                        Icons.help_outline_rounded,
+                    iconBg:
+                        const Color(0xFFE3D9F7),
+                    iconColor:
+                        const Color(0xFF6B46C1),
+                    label:
+                        l10n.privacyHelp,
                     value: '',
-                    onTap: () => _showInfoDialog(
-                      context,
-                      title: l.privacyHelp,
-                      body: _privacyText(language),
-                    ),
+                    onTap: () {
+                      _showInfoDialog(
+                        context,
+                        title:
+                            l10n.privacyHelp,
+                        body:
+                            l10n.privacyHelp,
+                      );
+                    },
                   ),
 
-                  // ---------------------------------------------------------
                   // ABOUT
-                  // ---------------------------------------------------------
                   _SettingsRow(
-                    icon: Icons.info_outline_rounded,
-                    iconBg: const Color(0xFFD6E8F7),
-                    iconColor: const Color(0xFF2B6CB0),
-                    label: l.aboutYaadSaathi,
+                    icon:
+                        Icons.info_outline_rounded,
+                    iconBg:
+                        const Color(0xFFD6E8F7),
+                    iconColor:
+                        const Color(0xFF2B6CB0),
+                    label:
+                        l10n.aboutYaadSaathi,
                     value: '',
-                    onTap: () => _showInfoDialog(
-                      context,
-                      title: l.aboutYaadSaathi,
-                      body: _aboutText(language),
-                    ),
+                    onTap: () {
+                      _showInfoDialog(
+                        context,
+                        title:
+                            l10n.aboutYaadSaathi,
+                        body:
+                            l10n.aboutYaadSaathi,
+                      );
+                    },
                   ),
                 ],
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  // =========================================================================
-  // LANGUAGE PICKER
-  // =========================================================================
-
-  void _showLanguagePicker(
-    BuildContext context, {
-    required AppLanguage currentLanguage,
-  }) {
-    final l = AppLocalizations.current();
-
-    final languages = AppLanguage.values;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(
-              top: 12,
-              bottom: 12,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    l.language,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-
-                ...languages.map(
-                  (language) => ListTile(
-                    leading: const Icon(
-                      Icons.language_rounded,
-                      color: AppColors.primaryGreen,
-                    ),
-                    title: Text(
-                      language.nativeName,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    trailing: language == currentLanguage
-                        ? const Icon(
-                            Icons.check_circle,
-                            color: AppColors.primaryGreen,
-                          )
-                        : null,
-                    onTap: () {
-                      // Update the REAL global language.
-                      AppLanguageController.instance.setLanguage(
-                        language,
-                      );
-
-                      // Keep the old settings controller in sync.
-                      appSettings.setLanguage(
-                        language.nativeName,
-                      );
-
-                      Navigator.of(sheetContext).pop();
-                    },
-                  ),
-                ),
-              ],
             ),
           ),
         );
@@ -347,24 +547,122 @@ class PatientSettingsScreen extends StatelessWidget {
     );
   }
 
-  // =========================================================================
-  // NORMAL PICKER
-  // =========================================================================
+  String _localizedVoiceValue(
+    String canonical,
+    AppLanguage language,
+  ) {
+    switch (canonical) {
+      case 'Slow':
+        return _voiceLabel(
+          language,
+          'slow',
+        );
+
+      case 'Fast':
+        return _voiceLabel(
+          language,
+          'fast',
+        );
+
+      case 'Normal Speed':
+      default:
+        return _voiceLabel(
+          language,
+          'normal',
+        );
+    }
+  }
+
+  void _showLanguagePicker(
+    BuildContext context,
+    AppLanguage current,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape:
+          const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (sheetContext) {
+        // EXACTLY FIVE.
+        final languages =
+            AppLanguage.values;
+
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight:
+                  MediaQuery.of(sheetContext)
+                      .size
+                      .height *
+                      0.7,
+            ),
+            child: ListView(
+              shrinkWrap: true,
+              children: languages.map(
+                (language) {
+                  final selected =
+                      language == current;
+
+                  return ListTile(
+                    title: Text(
+                      language.nativeName,
+                      style:
+                          const TextStyle(
+                        fontSize: 17,
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+                    trailing: selected
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: AppColors
+                                .primaryGreen,
+                          )
+                        : null,
+                    onTap: () {
+                      AppLanguageController
+                          .instance
+                          .setLanguage(
+                        language,
+                      );
+
+                      Navigator.of(
+                        sheetContext,
+                      ).pop();
+                    },
+                  );
+                },
+              ).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _showPicker(
     BuildContext context, {
     required String title,
     required List<String> options,
     required String current,
-    required void Function(String) onSelected,
-    required String Function(String) displayOption,
+    required void Function(String)
+        onSelected,
   }) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
+      shape:
+          const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(
           top: Radius.circular(20),
         ),
       ),
@@ -373,48 +671,58 @@ class PatientSettingsScreen extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight:
-                  MediaQuery.of(sheetContext).size.height * 0.7,
+                  MediaQuery.of(sheetContext)
+                      .size
+                      .height *
+                      0.7,
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding:
+                      const EdgeInsets.all(16),
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style:
+                        const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      fontWeight:
+                          FontWeight.w700,
                     ),
                   ),
                 ),
-
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
                     children: options.map(
-                      (option) => ListTile(
-                        title: Text(
-                          displayOption(option),
-                          style: const TextStyle(
-                            fontSize: 17,
-                          ),
-                        ),
-                        trailing: option == current
-                            ? const Icon(
-                                Icons.check_circle,
-                                color: AppColors.primaryGreen,
-                              )
-                            : null,
-                        onTap: () {
-                          onSelected(option);
-                          Navigator.of(sheetContext).pop();
-                        },
-                      ),
+                      (option) {
+                        return ListTile(
+                          title:
+                              Text(option),
+                          trailing:
+                              option == current
+                                  ? const Icon(
+                                      Icons
+                                          .check_circle,
+                                      color: AppColors
+                                          .primaryGreen,
+                                    )
+                                  : null,
+                          onTap: () {
+                            onSelected(
+                              option,
+                            );
+                            Navigator.of(
+                              sheetContext,
+                            ).pop();
+                          },
+                        );
+                      },
                     ).toList(),
                   ),
                 ),
-
                 const SizedBox(height: 8),
               ],
             ),
@@ -424,55 +732,6 @@ class PatientSettingsScreen extends StatelessWidget {
     );
   }
 
-  // =========================================================================
-  // CALL DIALOG
-  // =========================================================================
-
-  void _showCallDialog(
-    BuildContext context,
-    String name,
-    AppLanguage language,
-  ) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          _callTitle(name, language),
-        ),
-        content: Text(
-          _callBody(language),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              _cancelText(language),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGreen,
-            ),
-            onPressed: () {
-              // Wire url_launcher tel: here later.
-              Navigator.of(dialogContext).pop();
-            },
-            child: Text(
-              _callText(language),
-              style: const TextStyle(
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // =========================================================================
-  // INFO DIALOG
-  // =========================================================================
-
   void _showInfoDialog(
     BuildContext context, {
     required String title,
@@ -480,247 +739,27 @@ class PatientSettingsScreen extends StatelessWidget {
   }) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              AppLocalizations.current().cancel,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(body),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(
+                dialogContext,
+              ).pop(),
+              child: const Text('OK'),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
-  }
-
-  // =========================================================================
-  // LOCALIZED SETTINGS VALUES
-  // =========================================================================
-
-  String _localizedTextSize(
-    String value,
-    AppLanguage language,
-  ) {
-    switch (language) {
-      case AppLanguage.hindi:
-        switch (value) {
-          case 'Small':
-            return 'छोटा';
-          case 'Large':
-            return 'बड़ा';
-          case 'Extra Large':
-            return 'बहुत बड़ा';
-          default:
-            return 'मध्यम';
-        }
-
-      case AppLanguage.marathi:
-        switch (value) {
-          case 'Small':
-            return 'लहान';
-          case 'Large':
-            return 'मोठा';
-          case 'Extra Large':
-            return 'खूप मोठा';
-          default:
-            return 'मध्यम';
-        }
-
-      case AppLanguage.bengali:
-        switch (value) {
-          case 'Small':
-            return 'ছোট';
-          case 'Large':
-            return 'বড়';
-          case 'Extra Large':
-            return 'খুব বড়';
-          default:
-            return 'মাঝারি';
-        }
-
-      case AppLanguage.assamese:
-        switch (value) {
-          case 'Small':
-            return 'সৰু';
-          case 'Large':
-            return 'ডাঙৰ';
-          case 'Extra Large':
-            return 'অতি ডাঙৰ';
-          default:
-            return 'মধ্যম';
-        }
-
-      case AppLanguage.english:
-        return value;
-    }
-  }
-
-  String _localizedDisplay(
-    String value,
-    AppLanguage language,
-  ) {
-    if (language == AppLanguage.hindi) {
-      return value == 'High Contrast' ? 'उच्च कंट्रास्ट' : 'सामान्य';
-    }
-
-    if (language == AppLanguage.marathi) {
-      return value == 'High Contrast' ? 'उच्च कॉन्ट्रास्ट' : 'सामान्य';
-    }
-
-    if (language == AppLanguage.bengali) {
-      return value == 'High Contrast' ? 'উচ্চ কনট্রাস্ট' : 'সাধারণ';
-    }
-
-    if (language == AppLanguage.assamese) {
-      return value == 'High Contrast' ? 'উচ্চ কনট্ৰাষ্ট' : 'সাধাৰণ';
-    }
-
-    return value;
-  }
-
-  String _localizedVoiceSpeed(
-    String value,
-    AppLanguage language,
-  ) {
-    switch (language) {
-      case AppLanguage.hindi:
-        if (value == 'Slow') return 'धीमी';
-        if (value == 'Fast') return 'तेज़';
-        return 'सामान्य गति';
-
-      case AppLanguage.marathi:
-        if (value == 'Slow') return 'हळू';
-        if (value == 'Fast') return 'जलद';
-        return 'सामान्य वेग';
-
-      case AppLanguage.bengali:
-        if (value == 'Slow') return 'ধীর';
-        if (value == 'Fast') return 'দ্রুত';
-        return 'স্বাভাবিক গতি';
-
-      case AppLanguage.assamese:
-        if (value == 'Slow') return 'লাহে';
-        if (value == 'Fast') return 'দ্ৰুত';
-        return 'স্বাভাৱিক গতি';
-
-      case AppLanguage.english:
-        return value;
-    }
-  }
-
-  // =========================================================================
-  // DIALOG TRANSLATIONS
-  // =========================================================================
-
-  String _callTitle(
-    String name,
-    AppLanguage language,
-  ) {
-    switch (language) {
-      case AppLanguage.hindi:
-        return '$name को कॉल करें?';
-      case AppLanguage.marathi:
-        return '$name ला कॉल करायचा का?';
-      case AppLanguage.bengali:
-        return '$name-কে কল করবেন?';
-      case AppLanguage.assamese:
-        return '$name-ক ফোন কৰিবনে?';
-      case AppLanguage.english:
-        return 'Call $name?';
-    }
-  }
-
-  String _callBody(AppLanguage language) {
-    switch (language) {
-      case AppLanguage.hindi:
-        return 'इससे आपके केयरगिवर को फोन कॉल शुरू होगी।';
-      case AppLanguage.marathi:
-        return 'यामुळे तुमच्या केअरगिव्हरला फोन केला जाईल.';
-      case AppLanguage.bengali:
-        return 'এটি আপনার কেয়ারগিভারকে একটি ফোন কল শুরু করবে।';
-      case AppLanguage.assamese:
-        return 'ইয়াৰ জৰিয়তে আপোনাৰ কেয়াৰগিভাৰলৈ ফোন কৰা হ’ব।';
-      case AppLanguage.english:
-        return 'This will start a phone call to your caregiver.';
-    }
-  }
-
-  String _cancelText(AppLanguage language) {
-    switch (language) {
-      case AppLanguage.hindi:
-        return 'रद्द करें';
-      case AppLanguage.marathi:
-        return 'रद्द करा';
-      case AppLanguage.bengali:
-        return 'বাতিল';
-      case AppLanguage.assamese:
-        return 'বাতিল কৰক';
-      case AppLanguage.english:
-        return 'Cancel';
-    }
-  }
-
-  String _callText(AppLanguage language) {
-    switch (language) {
-      case AppLanguage.hindi:
-        return 'कॉल करें';
-      case AppLanguage.marathi:
-        return 'कॉल करा';
-      case AppLanguage.bengali:
-        return 'কল করুন';
-      case AppLanguage.assamese:
-        return 'ফোন কৰক';
-      case AppLanguage.english:
-        return 'Call';
-    }
-  }
-
-  String _privacyText(AppLanguage language) {
-    switch (language) {
-      case AppLanguage.hindi:
-        return 'आपकी गतिविधि और स्वास्थ्य संबंधी जानकारी सुरक्षित रखी जाती है और केवल आपके पंजीकृत केयरगिवर के साथ साझा की जाती है। ऐप का उपयोग करने में सहायता चाहिए तो अपने केयरगिवर से संपर्क करें।';
-
-      case AppLanguage.marathi:
-        return 'तुमची क्रिया आणि आरोग्याशी संबंधित माहिती सुरक्षित ठेवली जाते आणि फक्त तुमच्या नोंदणीकृत केअरगिव्हरसह शेअर केली जाते. अॅप वापरण्यास मदत हवी असल्यास तुमच्या केअरगिव्हरशी संपर्क साधा.';
-
-      case AppLanguage.bengali:
-        return 'আপনার কার্যকলাপ এবং স্বাস্থ্য সংক্রান্ত তথ্য নিরাপদে সংরক্ষণ করা হয় এবং শুধুমাত্র আপনার নিবন্ধিত কেয়ারগিভারের সঙ্গে শেয়ার করা হয়। অ্যাপ ব্যবহার করতে সাহায্যের প্রয়োজন হলে আপনার কেয়ারগিভারের সঙ্গে যোগাযোগ করুন।';
-
-      case AppLanguage.assamese:
-        return 'আপোনাৰ কাৰ্যকলাপ আৰু স্বাস্থ্য সম্পৰ্কীয় তথ্য সুৰক্ষিতভাৱে সংৰক্ষণ কৰা হয় আৰু কেৱল আপোনাৰ পঞ্জীয়নভুক্ত কেয়াৰগিভাৰৰ সৈতে ভাগ কৰা হয়। এপটো ব্যৱহাৰ কৰাত সহায়ৰ প্ৰয়োজন হ’লে আপোনাৰ কেয়াৰগিভাৰৰ সৈতে যোগাযোগ কৰক।';
-
-      case AppLanguage.english:
-        return 'Your activity and health data is stored securely and only shared with your registered caregiver. Contact your caregiver if you need help using the app.';
-    }
-  }
-
-  String _aboutText(AppLanguage language) {
-    switch (language) {
-      case AppLanguage.hindi:
-        return 'YaadSaathi आपको अपने प्रिय लोगों और रोज़मर्रा की दिनचर्या से जुड़े रहने में मदद करता है, साथ ही सरल दैनिक स्मृति गतिविधियाँ प्रदान करता है।';
-
-      case AppLanguage.marathi:
-        return 'YaadSaathi तुम्हाला तुमच्या प्रिय व्यक्ती आणि दैनंदिन दिनचर्येशी जोडलेले राहण्यास मदत करते आणि सोप्या दैनंदिन स्मरणशक्तीच्या क्रिया देते.';
-
-      case AppLanguage.bengali:
-        return 'YaadSaathi আপনাকে আপনার প্রিয় মানুষ এবং দৈনন্দিন রুটিনের সঙ্গে যুক্ত থাকতে সাহায্য করে এবং সহজ দৈনিক স্মৃতি কার্যকলাপ প্রদান করে।';
-
-      case AppLanguage.assamese:
-        return 'YaadSaathi-য়ে আপোনাক আপোনাৰ প্ৰিয় মানুহ আৰু দৈনন্দিন কাম-কাজৰ সৈতে সংযুক্ত হৈ থাকিবলৈ সহায় কৰে আৰু সহজ দৈনিক স্মৃতি কাৰ্যকলাপ প্ৰদান কৰে।';
-
-      case AppLanguage.english:
-        return 'YaadSaathi helps you stay connected to the people and routines you love, with simple daily memory activities.';
-    }
   }
 }
 
-// =============================================================================
-// SETTINGS ROW
-// =============================================================================
-
-class _SettingsRow extends StatelessWidget {
+class _SettingsRow
+    extends StatelessWidget {
   final IconData icon;
   final Color iconBg;
   final Color iconColor;
@@ -740,20 +779,27 @@ class _SettingsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding:
+          const EdgeInsets.only(
+        bottom: 12,
+      ),
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+            BorderRadius.circular(16),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius:
+              BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding:
+                const EdgeInsets.all(14),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: iconBg,
+                  backgroundColor:
+                      iconBg,
                   child: Icon(
                     icon,
                     color: iconColor,
@@ -766,9 +812,13 @@ class _SettingsRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(
+                    style:
+                        const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight:
+                          FontWeight.w600,
+                      color:
+                          AppColors.textDark,
                     ),
                   ),
                 ),
@@ -777,10 +827,12 @@ class _SettingsRow extends StatelessWidget {
                   Flexible(
                     child: Text(
                       value,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      style: const TextStyle(
-                        color: AppColors.textMedium,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style:
+                          const TextStyle(
+                        color: AppColors
+                            .textMedium,
                         fontSize: 14,
                       ),
                     ),
@@ -790,7 +842,8 @@ class _SettingsRow extends StatelessWidget {
 
                 const Icon(
                   Icons.chevron_right,
-                  color: AppColors.textLight,
+                  color:
+                      AppColors.textLight,
                 ),
               ],
             ),

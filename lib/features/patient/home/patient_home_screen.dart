@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/services/audio_service.dart';
 import '../../../core/state/patient_name_controller.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/speaker_button.dart';
 import '../../../data/fake_data/reminders.dart';
 import '../../../data/models/reminder.dart';
 import '../../caregiver/memory_circle/memory_circle_screen.dart';
@@ -13,6 +15,17 @@ import '../settings/patient_settings_screen.dart';
 
 class PatientHomeScreen extends StatelessWidget {
   const PatientHomeScreen({super.key});
+
+  Future<void> _speakGreeting() async {
+    final l10n = AppLocalizations.current();
+    final patientName = PatientNameController.instance.firstName.trim();
+
+    final text = patientName.isEmpty
+        ? l10n.goodMorning
+        : '${l10n.goodMorning} $patientName';
+
+    await AudioService().speak(text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +45,10 @@ class PatientHomeScreen extends StatelessWidget {
 
           body: Stack(
             children: [
+              // =====================================================
               // FULL SCREEN LANDSCAPE BACKGROUND
+              // =====================================================
+
               Positioned.fill(
                 child: Image.asset(
                   'assets/images/welcome_landscape.png',
@@ -61,6 +77,7 @@ class PatientHomeScreen extends StatelessWidget {
                       // =====================================================
                       // TOP BAR
                       // =====================================================
+
                       Row(
                         mainAxisAlignment:
                             MainAxisAlignment.spaceBetween,
@@ -103,24 +120,12 @@ class PatientHomeScreen extends StatelessWidget {
                             ),
                           ),
 
-                          Container(
-                            width: 58,
-                            height: 58,
-                            decoration: BoxDecoration(
-                              color: Colors.white
-                                  .withValues(alpha: 0.92),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.border,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.volume_up_rounded,
-                              color:
-                                  AppColors.primaryGreen,
-                              size: 30,
-                            ),
+                          // SPEAKER
+                          SpeakerButton(
+                            text: patientName.isEmpty
+                                ? l10n.goodMorning
+                                : '${l10n.goodMorning} $patientName',
+                            size: 58,
                           ),
                         ],
                       ),
@@ -130,6 +135,7 @@ class PatientHomeScreen extends StatelessWidget {
                       // =====================================================
                       // GREETING
                       // =====================================================
+
                       Text(
                         '${l10n.goodMorning},\n$patientName! 🌸',
                         textAlign: TextAlign.center,
@@ -146,6 +152,7 @@ class PatientHomeScreen extends StatelessWidget {
                       // =====================================================
                       // TODAY'S MEMORY ACTIVITY
                       // =====================================================
+
                       AppCard(
                         color:
                             Colors.white.withValues(alpha: 0.95),
@@ -164,7 +171,8 @@ class PatientHomeScreen extends StatelessWidget {
                                         .primaryGreenLight,
                                     borderRadius:
                                         BorderRadius.circular(
-                                            18),
+                                      18,
+                                    ),
                                   ),
                                   child: const Icon(
                                     Icons.groups_rounded,
@@ -228,8 +236,7 @@ class PatientHomeScreen extends StatelessWidget {
                                   backgroundColor:
                                       AppColors.primaryGreen,
                                   foregroundColor: Colors.white,
-                                  minimumSize:
-                                      const Size(
+                                  minimumSize: const Size(
                                     double.infinity,
                                     58,
                                   ),
@@ -237,7 +244,8 @@ class PatientHomeScreen extends StatelessWidget {
                                       RoundedRectangleBorder(
                                     borderRadius:
                                         BorderRadius.circular(
-                                            18),
+                                      18,
+                                    ),
                                   ),
                                 ),
                                 child: Text(
@@ -257,8 +265,9 @@ class PatientHomeScreen extends StatelessWidget {
                       const SizedBox(height: 18),
 
                       // =====================================================
-                      // QUICK CARDS
+                      // QUICK REMINDERS
                       // =====================================================
+
                       Row(
                         children: [
                           Expanded(
@@ -271,7 +280,9 @@ class PatientHomeScreen extends StatelessWidget {
                               subtitle: '8:00 AM',
                             ),
                           ),
+
                           const SizedBox(width: 14),
+
                           Expanded(
                             child: _QuickReminderCard(
                               icon:
@@ -299,7 +310,9 @@ class PatientHomeScreen extends StatelessWidget {
                               subtitle: '5:00 PM',
                             ),
                           ),
+
                           const SizedBox(width: 14),
+
                           Expanded(
                             child: _QuickReminderCard(
                               icon: Icons
@@ -318,6 +331,7 @@ class PatientHomeScreen extends StatelessWidget {
                       // =====================================================
                       // MEMORY CIRCLE
                       // =====================================================
+
                       AppCard(
                         color:
                             Colors.white.withValues(alpha: 0.95),
@@ -363,8 +377,7 @@ class PatientHomeScreen extends StatelessWidget {
                                             .titleLarge
                                             ?.copyWith(
                                               fontWeight:
-                                                  FontWeight
-                                                      .w800,
+                                                  FontWeight.w800,
                                             ),
                                   ),
                                   const SizedBox(height: 5),
@@ -383,8 +396,7 @@ class PatientHomeScreen extends StatelessWidget {
 
                             const Icon(
                               Icons.arrow_forward_ios_rounded,
-                              color:
-                                  AppColors.primaryGreen,
+                              color: AppColors.primaryGreen,
                               size: 26,
                             ),
                           ],
@@ -396,6 +408,7 @@ class PatientHomeScreen extends StatelessWidget {
                       // =====================================================
                       // REMINDERS
                       // =====================================================
+
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -433,6 +446,7 @@ class PatientHomeScreen extends StatelessWidget {
           // ================================================================
           // BOTTOM NAVIGATION
           // ================================================================
+
           bottomNavigationBar: _buildBottomNav(
             context,
             l10n,
@@ -469,21 +483,22 @@ class PatientHomeScreen extends StatelessWidget {
               onTap: () {},
             ),
 
+            // =================================================
+            // VOICE
+            // =================================================
+
             _NavItem(
               icon: Icons.mic_rounded,
               label: l10n.voice,
               active: false,
-              onTap: () {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n.voiceAssistantComingSoon,
-                    ),
-                  ),
-                );
+              onTap: () async {
+                await _speakGreeting();
               },
             ),
+
+            // =================================================
+            // SETTINGS
+            // =================================================
 
             _NavItem(
               icon: Icons.settings_rounded,

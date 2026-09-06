@@ -14,13 +14,15 @@ class PatientProfileScreen extends StatefulWidget {
   const PatientProfileScreen({super.key});
 
   @override
-  State<PatientProfileScreen> createState() => _PatientProfileScreenState();
+  State<PatientProfileScreen> createState() =>
+      _PatientProfileScreenState();
 }
 
-class _PatientProfileScreenState extends State<PatientProfileScreen> {
+class _PatientProfileScreenState
+    extends State<PatientProfileScreen> {
   late final TextEditingController _nameController;
 
-  DateTime _dob = DateTime(1952, 8, 15);
+  DateTime? _dob;
 
   late AppLanguage _language;
 
@@ -28,11 +30,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   void initState() {
     super.initState();
 
-    _nameController = TextEditingController(
-      text: PatientNameController.instance.name,
-    );
+    // IMPORTANT:
+    // Profile starts completely blank.
+    _nameController = TextEditingController();
 
-    _language = AppLanguageController.instance.language;
+    _dob = null;
+
+    _language =
+        AppLanguageController.instance.language;
   }
 
   @override
@@ -40,10 +45,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     _nameController.dispose();
     super.dispose();
   }
-
-  // ------------------------------------------------------------
-  // DATE FORMAT
-  // ------------------------------------------------------------
 
   String _formatDate(DateTime date) {
     final Map<AppLanguage, List<String>> months = {
@@ -119,21 +120,20 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       ],
     };
 
-    final month = months[_language]![date.month - 1];
+    final month =
+        months[_language]![date.month - 1];
 
     return '${date.day} $month ${date.year}';
   }
 
-  // ------------------------------------------------------------
-  // DATE PICKER
-  // ------------------------------------------------------------
-
   Future<void> _pickDate() async {
+    final now = DateTime.now();
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: _dob,
+      initialDate: _dob ?? now,
       firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
+      lastDate: now,
     );
 
     if (picked != null) {
@@ -143,14 +143,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     }
   }
 
-  // ------------------------------------------------------------
-  // LANGUAGE PICKER
-  // ------------------------------------------------------------
-
   void _pickLanguage() {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(24),
@@ -158,43 +155,51 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       ),
       builder: (context) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: AppLanguage.values.map((lang) {
-                final selected = lang == _language;
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight:
+                  MediaQuery.of(context).size.height *
+                      0.75,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: AppLanguage.values.map((lang) {
+                  final selected = lang == _language;
 
-                return ListTile(
-                  title: Text(
-                    lang.nativeName,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: selected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: selected
-                          ? AppColors.primaryGreen
-                          : AppColors.textDark,
+                  return ListTile(
+                    title: Text(
+                      lang.nativeName,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: selected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: selected
+                            ? AppColors.primaryGreen
+                            : AppColors.textDark,
+                      ),
                     ),
-                  ),
-                  trailing: selected
-                      ? const Icon(
-                          Icons.check_circle,
-                          color: AppColors.primaryGreen,
-                        )
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _language = lang;
-                    });
+                    trailing: selected
+                        ? const Icon(
+                            Icons.check_circle,
+                            color:
+                                AppColors.primaryGreen,
+                          )
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        _language = lang;
+                      });
 
-                    AppLanguageController.instance.setLanguage(lang);
+                      AppLanguageController.instance
+                          .setLanguage(lang);
 
-                    Navigator.of(context).pop();
-                  },
-                );
-              }).toList(),
+                      Navigator.of(context).pop();
+                    },
+                  );
+                }).toList(),
+              ),
             ),
           ),
         );
@@ -202,12 +207,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  // ------------------------------------------------------------
-  // PHOTO
-  // ------------------------------------------------------------
-
   void _onPhotoTap() {
-    final l10n = AppLocalizations.of(_language);
+    final l10n =
+        AppLocalizations.of(_language);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -218,21 +220,48 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  // ------------------------------------------------------------
-  // BUILD
-  // ------------------------------------------------------------
+  void _onContinue() {
+    final name =
+        _nameController.text.trim();
+
+    if (name.isEmpty || _dob == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${AppLocalizations.of(_language).name} '
+            '& ${AppLocalizations.of(_language).dateOfBirth}',
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Save the actual name entered by the user.
+    PatientNameController.instance.setName(name);
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const PatientHomeScreen(),
+      ),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: AppLanguageController.instance,
+      listenable:
+          AppLanguageController.instance,
       builder: (context, _) {
-        _language = AppLanguageController.instance.language;
+        _language =
+            AppLanguageController.instance.language;
 
-        final l10n = AppLocalizations.of(_language);
+        final l10n =
+            AppLocalizations.of(_language);
 
         final speechText =
-            '${l10n.setupProfileTitle}. ${l10n.setupProfileDescription}';
+            '${l10n.setupProfileTitle}. '
+            '${l10n.setupProfileDescription}';
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -244,16 +273,12 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               ),
               child: Column(
                 children: [
-                  // ------------------------------------------------
-                  // TOP BAR
-                  // ------------------------------------------------
-
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {
-                          Navigator.of(context).maybePop();
-                        },
+                        onPressed: () =>
+                            Navigator.of(context)
+                                .maybePop(),
                         icon: const Icon(
                           Icons.arrow_back,
                           color: AppColors.textDark,
@@ -269,13 +294,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
 
                   const SizedBox(height: 4),
 
-                  // ------------------------------------------------
-                  // TITLE
-                  // ------------------------------------------------
-
                   Text(
                     l10n.setupProfileTitle,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineMedium,
                     textAlign: TextAlign.center,
                   ),
 
@@ -283,62 +306,33 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
 
                   Text(
                     l10n.setupProfileDescription,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge,
                     textAlign: TextAlign.center,
                   ),
 
                   const SizedBox(height: 28),
 
-                  // ------------------------------------------------
-                  // AVATAR
-                  // ------------------------------------------------
-
                   _buildAvatar(),
 
                   const SizedBox(height: 28),
-
-                  // ------------------------------------------------
-                  // NAME
-                  // ------------------------------------------------
 
                   _buildNameField(l10n),
 
                   const SizedBox(height: 16),
 
-                  // ------------------------------------------------
-                  // DATE OF BIRTH
-                  // ------------------------------------------------
-
                   _buildDateField(l10n),
 
                   const SizedBox(height: 16),
-
-                  // ------------------------------------------------
-                  // LANGUAGE
-                  // ------------------------------------------------
 
                   _buildLanguageField(l10n),
 
                   const SizedBox(height: 28),
 
-                  // ------------------------------------------------
-                  // CONTINUE BUTTON
-                  // ------------------------------------------------
-
                   AppButton(
                     label: l10n.continueText,
-                    onPressed: () {
-                      PatientNameController.instance.setName(
-                        _nameController.text,
-                      );
-
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (_) => const PatientHomeScreen(),
-                        ),
-                        (route) => false,
-                      );
-                    },
+                    onPressed: _onContinue,
                   ),
 
                   const SizedBox(height: 12),
@@ -350,10 +344,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       },
     );
   }
-
-  // ------------------------------------------------------------
-  // AVATAR
-  // ------------------------------------------------------------
 
   Widget _buildAvatar() {
     return SizedBox(
@@ -367,7 +357,8 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
             height: 140,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primaryGreenLight,
+              color:
+                  AppColors.primaryGreenLight,
               border: Border.all(
                 color: AppColors.primaryGreen,
                 width: 2,
@@ -381,7 +372,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               ),
             ),
           ),
-
           Positioned(
             bottom: 0,
             right: 4,
@@ -411,14 +401,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  // ------------------------------------------------------------
-  // NAME FIELD
-  // ------------------------------------------------------------
-
-  Widget _buildNameField(AppLocalizations l10n) {
+  Widget _buildNameField(
+    AppLocalizations l10n,
+  ) {
     return AppCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
             l10n.name,
@@ -427,14 +416,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               fontSize: 14,
             ),
           ),
-
           const SizedBox(height: 6),
-
           TextField(
             controller: _nameController,
-            onChanged: (value) {
-              PatientNameController.instance.setName(value);
-            },
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -451,15 +435,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  // ------------------------------------------------------------
-  // DATE FIELD
-  // ------------------------------------------------------------
-
-  Widget _buildDateField(AppLocalizations l10n) {
+  Widget _buildDateField(
+    AppLocalizations l10n,
+  ) {
     return AppCard(
       onTap: _pickDate,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
             l10n.dateOfBirth,
@@ -468,14 +451,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               fontSize: 14,
             ),
           ),
-
           const SizedBox(height: 6),
-
           Row(
             children: [
               Expanded(
                 child: Text(
-                  _formatDate(_dob),
+                  _dob == null
+                      ? ''
+                      : _formatDate(_dob!),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -483,7 +466,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   ),
                 ),
               ),
-
               const Icon(
                 Icons.calendar_today_rounded,
                 color: AppColors.primaryGreen,
@@ -495,15 +477,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  // ------------------------------------------------------------
-  // LANGUAGE FIELD
-  // ------------------------------------------------------------
-
-  Widget _buildLanguageField(AppLocalizations l10n) {
+  Widget _buildLanguageField(
+    AppLocalizations l10n,
+  ) {
     return AppCard(
       onTap: _pickLanguage,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
             l10n.preferredLanguage,
@@ -512,9 +493,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               fontSize: 14,
             ),
           ),
-
           const SizedBox(height: 6),
-
           Row(
             children: [
               Expanded(
@@ -527,7 +506,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   ),
                 ),
               ),
-
               const Icon(
                 Icons.keyboard_arrow_down_rounded,
                 color: AppColors.primaryGreen,

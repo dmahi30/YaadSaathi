@@ -96,41 +96,32 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: AppLanguageController.instance,
-      builder: (context, _) {
-        final language = AppLanguageController.instance.language;
-        final l10n = AppLocalizations.of(language);
+    final language = AppLanguageController.instance.language;
+    final l10n = AppLocalizations.of(language);
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              child: Column(
-                children: [
-                  _buildTopBar(),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: _showFeedback
-                        ? _buildCorrectFeedback(l10n)
-                        : _buildQuestion(l10n),
-                  ),
-                ],
-              ),
-            ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 12,
           ),
-        );
-      },
+          child: Column(
+            children: [
+              _buildTopBar(),
+              const SizedBox(height: 24),
+              Expanded(
+                child: _showFeedback
+                    ? _buildCorrectFeedback(l10n)
+                    : _buildQuestion(l10n),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
-
-  // ============================================================
-  // TOP BAR
-  // ============================================================
 
   Widget _buildTopBar() {
     return Row(
@@ -145,9 +136,7 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
             size: 34,
           ),
         ),
-
         const SizedBox(width: 8),
-
         Expanded(
           child: Row(
             children: List.generate(
@@ -173,9 +162,7 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
             ),
           ),
         ),
-
         const SizedBox(width: 8),
-
         const Icon(
           Icons.pause_circle_outline,
           color: AppColors.textMedium,
@@ -184,10 +171,6 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
       ],
     );
   }
-
-  // ============================================================
-  // QUESTION SCREEN
-  // ============================================================
 
   Widget _buildQuestion(AppLocalizations l10n) {
     final question = _controller.currentQuestion;
@@ -200,10 +183,7 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
             style: Theme.of(context).textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ),
-
           const SizedBox(height: 28),
-
-          // BIG FACE IMAGE
           Container(
             width: 230,
             height: 230,
@@ -242,9 +222,7 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 24),
-
           Text(
             l10n.tapCorrectName,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -252,13 +230,7 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
                 ),
             textAlign: TextAlign.center,
           ),
-
           const SizedBox(height: 24),
-
-          // ======================================================
-          // NAME OPTIONS — NO PHOTOS HERE
-          // ======================================================
-
           ...question.options.map(
             (member) {
               final selected =
@@ -280,7 +252,6 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
                   ),
                   child: Row(
                     children: [
-                      // Simple letter circle — NOT the person's photo
                       Container(
                         width: 52,
                         height: 52,
@@ -298,9 +269,7 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
                           ),
                         ),
                       ),
-
                       const SizedBox(width: 20),
-
                       Expanded(
                         child: Text(
                           translatedName,
@@ -313,7 +282,6 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
                               ),
                         ),
                       ),
-
                       if (selected)
                         const Icon(
                           Icons.check_circle,
@@ -331,10 +299,6 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
     );
   }
 
-  // ============================================================
-  // CORRECT ANSWER FEEDBACK
-  // ============================================================
-
   Widget _buildCorrectFeedback(AppLocalizations l10n) {
     final member = _controller.currentQuestion.correctMember;
 
@@ -344,23 +308,17 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
       child: Column(
         children: [
           const SizedBox(height: 12),
-
           const Text(
             '🎉',
             style: TextStyle(fontSize: 56),
           ),
-
           const SizedBox(height: 12),
-
           Text(
             l10n.greatJob,
             style: Theme.of(context).textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ),
-
           const SizedBox(height: 20),
-
-          // Correct person's photo
           Container(
             width: 190,
             height: 190,
@@ -399,23 +357,17 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 18),
-
           Text(
             '${l10n.yes}! $translatedName.',
             style: Theme.of(context).textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
-
           const SizedBox(height: 20),
-
           SpeakerButton(
             text: '${l10n.yes}! $translatedName.',
           ),
-
           const SizedBox(height: 32),
-
           AppButton(
             label: _controller.isLastQuestion
                 ? l10n.seeResult

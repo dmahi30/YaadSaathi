@@ -8,14 +8,18 @@ import 'languages/bengali.dart';
 import 'languages/assamese.dart';
 
 class AppLocalizations {
+  // App
   final String appName;
   final String tagline;
   final String welcomeDescription;
   final String getStarted;
+
+  // Language Selection
   final String chooseYourLanguage;
   final String tapToSelect;
   final String confirmLanguage;
 
+  // Profile Setup
   final String setupProfileTitle;
   final String setupProfileDescription;
   final String name;
@@ -24,6 +28,7 @@ class AppLocalizations {
   final String continueText;
   final String photoUploadComingSoon;
 
+  // Patient Home
   final String goodMorning;
   final String memoryActivity;
   final String memoryCircle;
@@ -32,7 +37,11 @@ class AppLocalizations {
   final String activities;
   final String profile;
   final String noReminders;
+  final String online;
+  final String todaysMemoryActivity;
+  final String startActivity;
 
+  // Memory Game
   final String whoIsThis;
   final String greatJob;
   final String next;
@@ -43,24 +52,28 @@ class AppLocalizations {
   final String tapCorrectName;
   final String seeResult;
 
+  // Activity Result
   final String greatEffort;
   final String remembered;
   final String score;
   final String correctAnswers;
   final String backHome;
 
+  // Common
   final String yes;
   final String no;
   final String cancel;
   final String save;
   final String back;
 
+  // Activities
   final String matchFamiliarFaces;
   final String peopleVoicesMemories;
   final String voice;
   final String voiceAssistantComingSoon;
   final String settings;
 
+  // Memory Circle
   final String peopleYouLove;
   final String tapPersonToRemember;
   final String hearMessage;
@@ -74,16 +87,70 @@ class AppLocalizations {
   final String privacyHelp;
   final String aboutYaadSaathi;
 
-  // Patient Home
-  final String online;
-  final String todaysMemoryActivity;
-  final String startActivity;
+  // Reminders
   final String medicine;
   final String water;
   final String activity;
   final String appointment;
   final String tomorrow;
 
+  // Caregiver Authentication
+  final String welcomeCaregiver;
+  final String togetherLetsMakeEveryDayBrighter;
+  final String signIn;
+  final String alreadyHaveAnAccount;
+  final String registerAsCaregiver;
+  final String newToSmritiCircle;
+
+  // Caregiver Registration
+  final String createCaregiverAccount;
+  final String letsGetStartedWithDetails;
+  final String addProfilePhoto;
+  final String optional;
+  final String fullName;
+  final String enterFullName;
+  final String phoneNumber;
+  final String enterPhoneNumber;
+  final String relationshipToPatient;
+  final String selectRelationship;
+
+  // Relationships
+  final String spouse;
+  final String son;
+  final String daughter;
+  final String grandson;
+  final String granddaughter;
+  final String sibling;
+  final String other;
+
+  // OTP Verification (Page 5)
+  final String enterOtp;
+  final String weveSentCodeTo;
+  final String resendOtpIn;
+  final String verify;
+  final String didntReceiveCode;
+  final String resendOtp;
+  final String otpDemoNotice;
+  final String otpIncomplete;
+
+  // Create PIN (Page 6)
+  final String createPinTitle;
+  final String pinExplanation;
+  final String showPin;
+  final String confirmPin;
+  final String pinMismatch;
+  final String pinIncomplete;
+  final String keepInfoSafe;
+
+  // Consent (Page 7)
+  final String almostDone;
+  final String reviewAndAccept;
+  final String agreeToThe;
+  final String termsAndConditions;
+  final String consentDataUse;
+  final String dataSafeNotice;
+
+  // Family
   final String Function(String id) familyMemberName;
 
   AppLocalizations({
@@ -109,6 +176,9 @@ class AppLocalizations {
     required this.activities,
     required this.profile,
     required this.noReminders,
+    required this.online,
+    required this.todaysMemoryActivity,
+    required this.startActivity,
     required this.whoIsThis,
     required this.greatJob,
     required this.next,
@@ -143,14 +213,55 @@ class AppLocalizations {
     required this.callCaregiver,
     required this.privacyHelp,
     required this.aboutYaadSaathi,
-    required this.online,
-    required this.todaysMemoryActivity,
-    required this.startActivity,
     required this.medicine,
     required this.water,
     required this.activity,
     required this.appointment,
     required this.tomorrow,
+    required this.welcomeCaregiver,
+    required this.togetherLetsMakeEveryDayBrighter,
+    required this.signIn,
+    required this.alreadyHaveAnAccount,
+    required this.registerAsCaregiver,
+    required this.newToSmritiCircle,
+    required this.createCaregiverAccount,
+    required this.letsGetStartedWithDetails,
+    required this.addProfilePhoto,
+    required this.optional,
+    required this.fullName,
+    required this.enterFullName,
+    required this.phoneNumber,
+    required this.enterPhoneNumber,
+    required this.relationshipToPatient,
+    required this.selectRelationship,
+    required this.spouse,
+    required this.son,
+    required this.daughter,
+    required this.grandson,
+    required this.granddaughter,
+    required this.sibling,
+    required this.other,
+    required this.enterOtp,
+    required this.weveSentCodeTo,
+    required this.resendOtpIn,
+    required this.verify,
+    required this.didntReceiveCode,
+    required this.resendOtp,
+    required this.otpDemoNotice,
+    required this.otpIncomplete,
+    required this.createPinTitle,
+    required this.pinExplanation,
+    required this.showPin,
+    required this.confirmPin,
+    required this.pinMismatch,
+    required this.pinIncomplete,
+    required this.keepInfoSafe,
+    required this.almostDone,
+    required this.reviewAndAccept,
+    required this.agreeToThe,
+    required this.termsAndConditions,
+    required this.consentDataUse,
+    required this.dataSafeNotice,
     required this.familyMemberName,
   });
 
@@ -181,6 +292,9 @@ class AppLocalizations {
       activities: map['activities']!,
       profile: map['profile']!,
       noReminders: map['noReminders']!,
+      online: map['online']!,
+      todaysMemoryActivity: map['todaysMemoryActivity']!,
+      startActivity: map['startActivity']!,
       whoIsThis: map['whoIsThis']!,
       greatJob: map['greatJob']!,
       next: map['next']!,
@@ -215,14 +329,55 @@ class AppLocalizations {
       callCaregiver: map['callCaregiver']!,
       privacyHelp: map['privacyHelp']!,
       aboutYaadSaathi: map['aboutYaadSaathi']!,
-      online: map['online']!,
-      todaysMemoryActivity: map['todaysMemoryActivity']!,
-      startActivity: map['startActivity']!,
       medicine: map['medicine']!,
       water: map['water']!,
       activity: map['activity']!,
       appointment: map['appointment']!,
       tomorrow: map['tomorrow']!,
+      welcomeCaregiver: map['welcomeCaregiver']!,
+      togetherLetsMakeEveryDayBrighter: map['togetherLetsMakeEveryDayBrighter']!,
+      signIn: map['signIn']!,
+      alreadyHaveAnAccount: map['alreadyHaveAnAccount']!,
+      registerAsCaregiver: map['registerAsCaregiver']!,
+      newToSmritiCircle: map['newToSmritiCircle']!,
+      createCaregiverAccount: map['createCaregiverAccount']!,
+      letsGetStartedWithDetails: map['letsGetStartedWithDetails']!,
+      addProfilePhoto: map['addProfilePhoto']!,
+      optional: map['optional']!,
+      fullName: map['fullName']!,
+      enterFullName: map['enterFullName']!,
+      phoneNumber: map['phoneNumber']!,
+      enterPhoneNumber: map['enterPhoneNumber']!,
+      relationshipToPatient: map['relationshipToPatient']!,
+      selectRelationship: map['selectRelationship']!,
+      spouse: map['spouse']!,
+      son: map['son']!,
+      daughter: map['daughter']!,
+      grandson: map['grandson']!,
+      granddaughter: map['granddaughter']!,
+      sibling: map['sibling']!,
+      other: map['other']!,
+      enterOtp: map['enterOtp']!,
+      weveSentCodeTo: map['weveSentCodeTo']!,
+      resendOtpIn: map['resendOtpIn']!,
+      verify: map['verify']!,
+      didntReceiveCode: map['didntReceiveCode']!,
+      resendOtp: map['resendOtp']!,
+      otpDemoNotice: map['otpDemoNotice']!,
+      otpIncomplete: map['otpIncomplete']!,
+      createPinTitle: map['createPinTitle']!,
+      pinExplanation: map['pinExplanation']!,
+      showPin: map['showPin']!,
+      confirmPin: map['confirmPin']!,
+      pinMismatch: map['pinMismatch']!,
+      pinIncomplete: map['pinIncomplete']!,
+      keepInfoSafe: map['keepInfoSafe']!,
+      almostDone: map['almostDone']!,
+      reviewAndAccept: map['reviewAndAccept']!,
+      agreeToThe: map['agreeToThe']!,
+      termsAndConditions: map['termsAndConditions']!,
+      consentDataUse: map['consentDataUse']!,
+      dataSafeNotice: map['dataSafeNotice']!,
       familyMemberName: (id) => familyNames[id] ?? id,
     );
   }
@@ -267,30 +422,16 @@ class AppLocalizations {
     'dadi': 'আইতা',
   };
 
-  static final AppLocalizations _english = AppLocalizations.fromMap(
-    english,
-    _englishFamilyNames,
-  );
-
-  static final AppLocalizations _hindi = AppLocalizations.fromMap(
-    hindi,
-    _hindiFamilyNames,
-  );
-
-  static final AppLocalizations _marathi = AppLocalizations.fromMap(
-    marathi,
-    _marathiFamilyNames,
-  );
-
-  static final AppLocalizations _bengali = AppLocalizations.fromMap(
-    bengali,
-    _bengaliFamilyNames,
-  );
-
-  static final AppLocalizations _assamese = AppLocalizations.fromMap(
-    assamese,
-    _assameseFamilyNames,
-  );
+  static final AppLocalizations _english =
+      AppLocalizations.fromMap(english, _englishFamilyNames);
+  static final AppLocalizations _hindi =
+      AppLocalizations.fromMap(hindi, _hindiFamilyNames);
+  static final AppLocalizations _marathi =
+      AppLocalizations.fromMap(marathi, _marathiFamilyNames);
+  static final AppLocalizations _bengali =
+      AppLocalizations.fromMap(bengali, _bengaliFamilyNames);
+  static final AppLocalizations _assamese =
+      AppLocalizations.fromMap(assamese, _assameseFamilyNames);
 
   static AppLocalizations of(AppLanguage language) {
     switch (language) {

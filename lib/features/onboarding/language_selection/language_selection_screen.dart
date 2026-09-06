@@ -1,9 +1,9 @@
-import '../../patient/profile/patient_profile_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/speaker_button.dart';
+import '../../caregiver/auth/caregiver_auth_screen.dart';
 
 class AppLanguage {
   final String code;
@@ -123,10 +123,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               AppButton(
                 label: 'Confirm Language',
                 onPressed: () {
-                 Navigator.of(context).pushAndRemoveUntil(
-                 MaterialPageRoute(builder: (_) => const PatientProfileScreen()),
-                 (route) => false,
-                 );
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const CaregiverAuthScreen()),
+                    (route) => false,
+                  );
                 },
               ),
             ],
