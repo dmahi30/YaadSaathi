@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/speaker_button.dart';
 import '../../../../core/services/sync_service.dart';
+import '../../../../core/state/patient_profile_controller.dart';
 import '../../../../data/models/family_member.dart';
 import '../../../../data/models/game_session.dart';
 import '../../result/activity_result_screen.dart';
@@ -16,11 +17,13 @@ class FaceNameMatchScreen extends StatefulWidget {
   const FaceNameMatchScreen({super.key});
 
   @override
-  State<FaceNameMatchScreen> createState() => _FaceNameMatchScreenState();
+  State<FaceNameMatchScreen> createState() =>
+      _FaceNameMatchScreenState();
 }
 
 class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
   late final FaceNameController _controller;
+
   bool _showFeedback = false;
 
   @override
@@ -45,18 +48,18 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
   }
 
   void _onOptionTap(FamilyMember tapped) {
-  if (_showFeedback) return;
+    if (_showFeedback) return;
 
-  final correct = _controller.submitAnswer(tapped);
+    final correct = _controller.submitAnswer(tapped);
 
-  if (correct) {
-    setState(() {
-      _showFeedback = true;
-    });
-  } else {
-    _onNext();
+    if (correct) {
+      setState(() {
+        _showFeedback = true;
+      });
+    } else {
+      _onNext();
+    }
   }
-}
 
   Future<void> _onNext() async {
     final hasMore = _controller.nextQuestion();
@@ -66,21 +69,28 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
     });
 
     if (!hasMore) {
-  final session = GameSession(
-    totalQuestions: _controller.totalCount,
-    correctAnswers: _controller.correctCount,
-    completedAt: DateTime.now(),
-  );
+      final session = GameSession(
+        totalQuestions: _controller.totalCount,
+        correctAnswers: _controller.correctCount,
+        completedAt: DateTime.now(),
+      );
 
-  await SyncService.saveGameSession(
-    patientId: 'patient_001',
-    gameType: 'face_name_match',
-    session: session,
-  );
+      // Use the real patient ID created by Patient Profile.
+      final patientId =
+          patientProfileController.patientId.trim();
 
-  if (!mounted) return;
+      // Save the game only when a valid patient ID exists.
+      if (patientId.isNotEmpty) {
+        await SyncService.saveGameSession(
+          patientId: patientId,
+          gameType: 'face_name_match',
+          session: session,
+        );
+      }
 
-  Navigator.of(context).pushReplacement(
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => ActivityResultScreen(
             session: session,
@@ -92,7 +102,9 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final language = AppLanguageController.instance.language;
+    final language =
+        AppLanguageController.instance.language;
+
     final l10n = AppLocalizations.of(language);
 
     return Scaffold(
@@ -138,7 +150,8 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
             children: List.generate(
               _controller.totalCount,
               (i) {
-                final active = i <= _controller.currentIndex;
+                final active =
+                    i <= _controller.currentIndex;
 
                 return Expanded(
                   child: Container(
@@ -150,7 +163,8 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
                       color: active
                           ? AppColors.primaryGreen
                           : AppColors.border,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius:
+                          BorderRadius.circular(4),
                     ),
                   ),
                 );
@@ -168,7 +182,9 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
     );
   }
 
-  Widget _buildQuestion(AppLocalizations l10n) {
+  Widget _buildQuestion(
+    AppLocalizations l10n,
+  ) {
     final question = _controller.currentQuestion;
 
     return SingleChildScrollView(
@@ -176,7 +192,8 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
         children: [
           Text(
             l10n.whoIsThis,
-            style: Theme.of(context).textTheme.headlineMedium,
+            style:
+                Theme.of(context).textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
@@ -191,7 +208,9 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
+                  color: Colors.black.withValues(
+                    alpha: 0.10,
+                  ),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -201,9 +220,11 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
               child: Image.asset(
                 question.correctMember.imagePath,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                errorBuilder:
+                    (context, error, stackTrace) {
                   return Container(
-                    color: question.correctMember.avatarColor,
+                    color:
+                        question.correctMember.avatarColor,
                     alignment: Alignment.center,
                     child: Text(
                       question.correctMember.name[0],
@@ -221,28 +242,32 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
           const SizedBox(height: 24),
           Text(
             l10n.tapCorrectName,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontSize: 20,
-                ),
+            style:
+                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 20,
+                    ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           ...question.options.map(
             (member) {
               final selected =
-                  _controller.selectedOptionId == member.id;
+                  _controller.selectedOptionId ==
+                      member.id;
 
               final translatedName =
                   l10n.familyMemberName(member.id);
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 14),
+                padding:
+                    const EdgeInsets.only(bottom: 14),
                 child: AppCard(
                   color: selected
                       ? AppColors.primaryGreenLight
                       : AppColors.surfaceCard,
                   onTap: () => _onOptionTap(member),
-                  padding: const EdgeInsets.symmetric(
+                  padding:
+                      const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 24,
                   ),
@@ -274,7 +299,8 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
                               .titleLarge
                               ?.copyWith(
                                 fontSize: 22,
-                                fontWeight: FontWeight.w500,
+                                fontWeight:
+                                    FontWeight.w500,
                               ),
                         ),
                       ),
@@ -295,10 +321,14 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
     );
   }
 
-  Widget _buildCorrectFeedback(AppLocalizations l10n) {
-    final member = _controller.currentQuestion.correctMember;
+  Widget _buildCorrectFeedback(
+    AppLocalizations l10n,
+  ) {
+    final member =
+        _controller.currentQuestion.correctMember;
 
-    final translatedName = l10n.familyMemberName(member.id);
+    final translatedName =
+        l10n.familyMemberName(member.id);
 
     return SingleChildScrollView(
       child: Column(
@@ -311,7 +341,8 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
           const SizedBox(height: 12),
           Text(
             l10n.greatJob,
-            style: Theme.of(context).textTheme.headlineMedium,
+            style:
+                Theme.of(context).textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
@@ -326,7 +357,9 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
+                  color: Colors.black.withValues(
+                    alpha: 0.10,
+                  ),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -336,7 +369,8 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
               child: Image.asset(
                 member.imagePath,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                errorBuilder:
+                    (context, error, stackTrace) {
                   return Container(
                     color: member.avatarColor,
                     alignment: Alignment.center,
@@ -356,7 +390,8 @@ class _FaceNameMatchScreenState extends State<FaceNameMatchScreen> {
           const SizedBox(height: 18),
           Text(
             '${l10n.yes}! $translatedName.',
-            style: Theme.of(context).textTheme.titleLarge,
+            style:
+                Theme.of(context).textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),

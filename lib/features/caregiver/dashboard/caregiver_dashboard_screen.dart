@@ -4,110 +4,567 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_language_controller.dart';
 import '../../../core/services/sync_service.dart';
+import '../../../core/state/patient_name_controller.dart';
+import '../../../core/state/patient_profile_controller.dart';
+import '../progress/progress_screen.dart';
 
 class CaregiverDashboardScreen extends StatelessWidget {
-  const CaregiverDashboardScreen({super.key});
+  const CaregiverDashboardScreen({
+    super.key,
+    this.patientId,
+  });
 
-  static const String patientId = 'patient_001';
-  static const String patientName = 'Leima Devi';
-  static const String patientAge = 'Age 72';
-  static const String patientLanguage = 'Assamese';
+  final String? patientId;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F1E8),
-      body: SafeArea(
-        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: SyncService.gameSessionsStream(
-            patientId: patientId,
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        PatientNameController.instance,
+        patientProfileController,
+        AppLanguageController.instance,
+      ]),
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF4F1E8),
+          body: SafeArea(
+            bottom: false,
+            child: _buildBody(context),
           ),
-          builder: (context, snapshot) {
-            final sessions = snapshot.data?.docs ?? [];
+          bottomNavigationBar: _buildBottomNavigation(context),
+        );
+      },
+    );
+  }
 
-            final faceSession = sessions.cast<
-                QueryDocumentSnapshot<Map<String, dynamic>>>()
-              .where(
-                (doc) => doc.data()['gameType'] == 'face_name_match',
-              )
-              .toList();
+  // ------------------------------------------------------------
+  // DASHBOARD BODY
+  // ------------------------------------------------------------
 
-            final faceScore = faceSession.isNotEmpty
-                ? _score(faceSession.first.data())
-                : 0;
+  Widget _buildBody(BuildContext context) {
+    final selectedPatientId =
+        patientId?.trim().isNotEmpty == true
+            ? patientId!.trim()
+            : patientProfileController.patientId.trim();
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
+    final stream = selectedPatientId.isEmpty
+        ? null
+        : SyncService.gameSessionsStream(
+            patientId: selectedPatientId,
+          );
 
-                  const SizedBox(height: 14),
+    if (stream == null) {
+      return _buildDashboardContent(
+        context,
+        const [],
+      );
+    }
 
-                  _buildPatientCard(context),
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        final sessions = snapshot.data?.docs ?? [];
 
-                  const SizedBox(height: 16),
+        return _buildDashboardContent(
+          context,
+          sessions,
+        );
+      },
+    );
+  }
 
-                  _buildActivityHeader(),
+  // ------------------------------------------------------------
+  // DASHBOARD CONTENT
+  // ------------------------------------------------------------
 
-                  const SizedBox(height: 8),
+  Widget _buildDashboardContent(
+    BuildContext context,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+  ) {
+    final patientName =
+        PatientNameController.instance.name.trim().isNotEmpty
+            ? PatientNameController.instance.name.trim()
+            : patientProfileController.fullName.trim();
 
-                  _buildActivityCard(
-                    faceScore: faceScore,
-                  ),
+    final displayName =
+        patientName.isEmpty ? 'Patient' : patientName;
 
-                  const SizedBox(height: 16),
+    final age = patientProfileController.age;
+    final language = patientProfileController.languageName;
 
-                  _buildAiSummary(
-                    faceScore: faceScore,
-                  ),
+    final faceScore =
+        _getScore(sessions, 'face_name_match');
 
-                  const SizedBox(height: 20),
+    final faceTotal =
+        _getTotal(sessions, 'face_name_match');
 
-                  _buildBottomNavigation(),
-                ],
+    final voiceScore = _getCategoryScore(
+      sessions,
+      const [
+        'voice',
+        'voice_match',
+        'voice_memory',
+      ],
+    );
+
+    final voiceTotal = _getCategoryTotal(
+      sessions,
+      const [
+        'voice',
+        'voice_match',
+        'voice_memory',
+      ],
+    );
+
+    final routineScore = _getCategoryScore(
+      sessions,
+      const [
+        'routine',
+        'routine_match',
+        'routine_memory',
+      ],
+    );
+
+    final routineTotal = _getCategoryTotal(
+      sessions,
+      const [
+        'routine',
+        'routine_match',
+        'routine_memory',
+      ],
+    );
+
+    final completedActivities = sessions.length;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        18,
+        14,
+        18,
+        24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ------------------------------------------------------
+          // HEADER
+          // ------------------------------------------------------
+
+          Row(
+            children: [
+              _roundButton(
+                icon: Icons.arrow_back_ios_new,
+                onTap: () {
+                  Navigator.of(context).maybePop();
+                },
               ),
-            );
-          },
-        ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Text(
+                  'Caregiver Dashboard',
+                  style: TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+              _roundButton(
+                icon: Icons.volume_up_outlined,
+                onTap: () {
+                  // Speaker action can be connected to TTS later.
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 22),
+
+          // ------------------------------------------------------
+          // PATIENT CARD
+          // ------------------------------------------------------
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                  color: Colors.black.withValues(
+                    alpha: 0.06,
+                  ),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primaryGreen.withValues(
+                      alpha: 0.12,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    size: 34,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Patient',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textMedium,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          if (age != null)
+                            _infoChip(
+                              Icons.cake_outlined,
+                              'Age: $age',
+                            ),
+                          if (language.isNotEmpty)
+                            _infoChip(
+                              Icons.language,
+                              'Lang: $language',
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Patient profile navigation
+                    // can be connected here.
+                  },
+                  child: const Text(
+                    'View Profile',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 26),
+
+          // ------------------------------------------------------
+          // TODAY'S ACTIVITY HEADER
+          // ------------------------------------------------------
+
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  "Today's Activity",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: const Text(
+                  'See All',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // ------------------------------------------------------
+          // ACTIVITY CARD
+          // ------------------------------------------------------
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 22,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                  color: Colors.black.withValues(
+                    alpha: 0.06,
+                  ),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 108,
+                      height: 108,
+                      child: CustomPaint(
+                        painter: _ProgressPainter(
+                          completed: completedActivities,
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize:
+                                MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$completedActivities',
+                                style: const TextStyle(
+                                  fontSize: 25,
+                                  fontWeight:
+                                      FontWeight.w800,
+                                  color:
+                                      AppColors.textDark,
+                                ),
+                              ),
+                              const Text(
+                                'Completed',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      AppColors.textMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 22),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _activityRow(
+                            icon:
+                                Icons.face_retouching_natural,
+                            title: 'Faces',
+                            score: faceScore,
+                            total: faceTotal,
+                          ),
+                          const SizedBox(height: 14),
+                          _activityRow(
+                            icon: Icons.mic_none,
+                            title: 'Voices',
+                            score: voiceScore,
+                            total: voiceTotal,
+                          ),
+                          const SizedBox(height: 14),
+                          _activityRow(
+                            icon: Icons.schedule,
+                            title: 'Routines',
+                            score: routineScore,
+                            total: routineTotal,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 26),
+
+          // ------------------------------------------------------
+          // AI SUMMARY
+          // ------------------------------------------------------
+
+          const Text(
+            'AI Summary',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withValues(
+                alpha: 0.08,
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: AppColors.primaryGreen.withValues(
+                  alpha: 0.12,
+                ),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        AppColors.primaryGreen.withValues(
+                      alpha: 0.14,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    _buildAiSummary(
+                      displayName,
+                      faceScore,
+                      faceTotal,
+                      completedActivities,
+                    ),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }
 
-  // ============================================================
-  // HEADER
-  // ============================================================
+  // ------------------------------------------------------------
+  // ACTIVITY ROW
+  // ------------------------------------------------------------
 
-  Widget _buildHeader() {
+  Widget _activityRow({
+    required IconData icon,
+    required String title,
+    required int score,
+    required int total,
+  }) {
     return Row(
       children: [
-        _roundButton(
-          icon: Icons.arrow_back_ios_new,
-          onTap: () {},
+        Icon(
+          icon,
+          size: 22,
+          color: AppColors.primaryGreen,
         ),
-
-        const Expanded(
-          child: Center(
-            child: Text(
-              'Caregiver Dashboard',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
-              ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textDark,
             ),
           ),
         ),
-
-        _roundButton(
-          icon: Icons.volume_up_outlined,
-          onTap: () {},
+        Text(
+          '$score/$total',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+          ),
         ),
       ],
     );
   }
+
+  // ------------------------------------------------------------
+  // INFO CHIP
+  // ------------------------------------------------------------
+
+  Widget _infoChip(
+    IconData icon,
+    String text,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 9,
+        vertical: 5,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primaryGreen.withValues(
+          alpha: 0.08,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: AppColors.primaryGreen,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------
+  // ROUND BUTTON
+  // ------------------------------------------------------------
 
   Widget _roundButton({
     required IconData icon,
@@ -116,15 +573,15 @@ class CaregiverDashboardScreen extends StatelessWidget {
     return Material(
       color: Colors.white,
       shape: const CircleBorder(),
+      elevation: 2,
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
-        child: SizedBox(
-          width: 46,
-          height: 46,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
           child: Icon(
             icon,
-            size: 22,
+            size: 20,
             color: AppColors.textDark,
           ),
         ),
@@ -132,453 +589,260 @@ class CaregiverDashboardScreen extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // PATIENT CARD
-  // ============================================================
-
-  Widget _buildPatientCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFEAF3DE),
-            ),
-            child: const Icon(
-              Icons.person,
-              size: 34,
-              color: AppColors.primaryGreen,
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  patientName,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  patientAge,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textMedium,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  patientLanguage,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textMedium,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          
-            SizedBox(
-  width: 100,
-  child: OutlinedButton(
-    onPressed: () {},
-    style: OutlinedButton.styleFrom(
-      backgroundColor: const Color(0xFFEAF3DE),
-      foregroundColor: AppColors.textDark,
-      side: BorderSide.none,
-      minimumSize: const Size(0, 44),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 10,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-    ),
-                child: const Text(
-              'View Profile',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  
-  // ============================================================
-  // TODAY'S ACTIVITY HEADER
-  // ============================================================
-
-  Widget _buildActivityHeader() {
-    return const Row(
-      children: [
-        Text(
-          "Today's Activity",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
-          ),
-        ),
-
-        Spacer(),
-
-        Text(
-          'See All',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primaryGreen,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // ACTIVITY CARD
-  // ============================================================
-
-  Widget _buildActivityCard({
-    required int faceScore,
-  }) {
-    // Voice and routine are not connected to Firebase yet.
-    // Keeping these as placeholders matches the prototype.
-    const int voiceScore = 3;
-    const int routineScore = 4;
-
-    final completed =
-        faceScore > 0 ? faceScore : 0;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 18,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 5,
-            child: _buildCircularScore(
-              score: completed,
-              total: 5,
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          Expanded(
-            flex: 6,
-            child: Column(
-              children: [
-                _activityRow(
-                  icon: Icons.face_outlined,
-                  title: 'Faces',
-                  score: '$completed/5',
-                ),
-
-                const SizedBox(height: 16),
-
-                _activityRow(
-                  icon: Icons.mic_none,
-                  title: 'Voices',
-                  score: '$voiceScore/5',
-                ),
-
-                const SizedBox(height: 16),
-
-                _activityRow(
-                  icon: Icons.access_time,
-                  title: 'Routines',
-                  score: '$routineScore/5',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCircularScore({
-    required int score,
-    required int total,
-  }) {
-    return SizedBox(
-      width: 120,
-      height: 120,
-      child: CustomPaint(
-        painter: _ProgressPainter(
-          progress: total == 0 ? 0 : score / total,
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$score/$total',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 2),
-              const Text(
-                'Completed',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textMedium,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _activityRow({
-    required IconData icon,
-    required String title,
-    required String score,
-  }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 25,
-          color: AppColors.primaryGreen,
-        ),
-
-        const SizedBox(width: 10),
-
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textDark,
-            ),
-          ),
-        ),
-
-        Text(
-          score,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // AI SUMMARY
-  // ============================================================
-
-  Widget _buildAiSummary({
-  required int faceScore,
-}) {
-  final String summary;
-
-  if (faceScore >= 4) {
-    summary =
-        'Leima did well in today\'s activity! '
-        'She remembered most of the people correctly. '
-        'Keep encouraging her!';
-  } else if (faceScore >= 2) {
-    summary =
-        'Leima completed today\'s activity steadily. '
-        'Continue practicing familiar people and memories '
-        'at a comfortable pace.';
-  } else {
-    summary =
-        'Leima may benefit from a little more support '
-        'with today\'s memory activity. Keep the activity '
-        'gentle and encouraging.';
-  }
-
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: const Color(0xFFFFEDED),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: const Color(0xFFF3D5D5),
-      ),
-    ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '💡',
-          style: TextStyle(fontSize: 28),
-        ),
-
-        const SizedBox(width: 12),
-
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'AI Summary',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              Text(
-                summary,
-                style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.45,
-                  color: AppColors.textMedium,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-  // ============================================================
+  // ------------------------------------------------------------
   // BOTTOM NAVIGATION
-  // ============================================================
+  // ------------------------------------------------------------
 
-  Widget _buildBottomNavigation() {
-    return Container(
-      padding: const EdgeInsets.only(
-        top: 10,
-        bottom: 4,
-      ),
-      decoration: const BoxDecoration(
-        color: Colors.transparent,
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavItem(
-            icon: Icons.home,
-            label: 'Home',
-            active: true,
-          ),
-          _NavItem(
-            icon: Icons.insights,
-            label: 'Progress',
-          ),
-          _NavItem(
-            icon: Icons.notifications_none,
-            label: 'Reminders',
-          ),
-          _NavItem(
-            icon: Icons.more_horiz,
-            label: 'More',
-          ),
-        ],
+  Widget _buildBottomNavigation(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          12,
+          8,
+          12,
+          8,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 12,
+              offset: const Offset(0, -3),
+              color: Colors.black.withValues(
+                alpha: 0.07,
+              ),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment:
+              MainAxisAlignment.spaceAround,
+          children: [
+            _navItem(
+              icon: Icons.home_outlined,
+              label: 'Home',
+              selected: true,
+              onTap: () {},
+            ),
+
+            // --------------------------------------------------
+            // PROGRESS
+            // --------------------------------------------------
+
+            _navItem(
+              icon: Icons.bar_chart_outlined,
+              label: 'Progress',
+              selected: false,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ProgressScreen(
+                      patientId: patientId,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // --------------------------------------------------
+            // REMINDER
+            // --------------------------------------------------
+
+            _navItem(
+              icon: Icons.notifications_none,
+              label: 'Reminder',
+              selected: false,
+              onTap: () {},
+            ),
+
+            // --------------------------------------------------
+            // SETTINGS
+            // --------------------------------------------------
+
+            _navItem(
+              icon: Icons.settings_outlined,
+              label: 'Settings',
+              selected: false,
+              onTap: () {},
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  int _score(Map<String, dynamic> data) {
-    return (data['correctAnswers'] as num?)?.toInt() ?? 0;
-  }
-}
-
-// ============================================================
-// NAV ITEM
-// ============================================================
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    this.active = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          size: 25,
-          color: active
-              ? AppColors.primaryGreen
-              : AppColors.textMedium,
+  Widget _navItem({
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 5,
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight:
-                active ? FontWeight.w600 : FontWeight.normal,
-            color: active
-                ? AppColors.primaryGreen
-                : AppColors.textMedium,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 23,
+              color: selected
+                  ? AppColors.primaryGreen
+                  : AppColors.textMedium,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: selected
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: selected
+                    ? AppColors.primaryGreen
+                    : AppColors.textMedium,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
+
+  // ------------------------------------------------------------
+  // FIRESTORE SCORE HELPERS
+  // ------------------------------------------------------------
+
+  int _getScore(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    String gameType,
+  ) {
+    int correct = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+
+      if (data['gameType'] == gameType) {
+        correct +=
+            (data['correctAnswers'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    return correct;
+  }
+
+  int _getTotal(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    String gameType,
+  ) {
+    int total = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+
+      if (data['gameType'] == gameType) {
+        total +=
+            (data['totalQuestions'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    return total;
+  }
+
+  int _getCategoryScore(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    List<String> gameTypes,
+  ) {
+    int score = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+      final type = data['gameType'];
+
+      if (type is String && gameTypes.contains(type)) {
+        score +=
+            (data['correctAnswers'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    return score;
+  }
+
+  int _getCategoryTotal(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    List<String> gameTypes,
+  ) {
+    int total = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+      final type = data['gameType'];
+
+      if (type is String && gameTypes.contains(type)) {
+        total +=
+            (data['totalQuestions'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    return total;
+  }
+
+  // ------------------------------------------------------------
+  // AI SUMMARY
+  // ------------------------------------------------------------
+
+  String _buildAiSummary(
+    String patientName,
+    int faceScore,
+    int faceTotal,
+    int completedActivities,
+  ) {
+    if (completedActivities == 0) {
+      return '$patientName has not completed any activities yet. '
+          'Once activities are completed, the dashboard will show '
+          'their progress and helpful insights here.';
+    }
+
+    if (faceTotal == 0) {
+      return '$patientName has completed '
+          '$completedActivities activity${completedActivities == 1 ? '' : 'ies'}. '
+          'More activities will help build a clearer picture of progress.';
+    }
+
+    final percentage =
+        (faceScore / faceTotal) * 100;
+
+    if (percentage >= 80) {
+      return '$patientName is doing well with memory activities. '
+          'Face and name recognition is showing strong performance.';
+    }
+
+    if (percentage >= 50) {
+      return '$patientName is making steady progress. '
+          'Regular short practice sessions may help strengthen memory.';
+    }
+
+    return '$patientName may benefit from gentle, repeated practice. '
+        'Keep activities short, positive, and comfortable.';
+  }
 }
 
-// ============================================================
-// CIRCULAR PROGRESS PAINTER
-// ============================================================
+// --------------------------------------------------------------
+// PROGRESS PAINTER
+// --------------------------------------------------------------
 
 class _ProgressPainter extends CustomPainter {
-  final double progress;
-
   _ProgressPainter({
-    required this.progress,
+    required this.completed,
   });
+
+  final int completed;
 
   @override
   void paint(
@@ -595,13 +859,15 @@ class _ProgressPainter extends CustomPainter {
 
     final backgroundPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7
+      ..strokeWidth = 9
       ..strokeCap = StrokeCap.round
-      ..color = AppColors.border;
+      ..color = AppColors.primaryGreen.withValues(
+        alpha: 0.12,
+      );
 
     final progressPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7
+      ..strokeWidth = 9
       ..strokeCap = StrokeCap.round
       ..color = AppColors.primaryGreen;
 
@@ -611,15 +877,16 @@ class _ProgressPainter extends CustomPainter {
       backgroundPaint,
     );
 
-    final rect = Rect.fromCircle(
-      center: center,
-      radius: radius,
-    );
+    final progress =
+        completed > 0 ? 1.0 : 0.0;
 
     canvas.drawArc(
-      rect,
+      Rect.fromCircle(
+        center: center,
+        radius: radius,
+      ),
       -math.pi / 2,
-      2 * math.pi * progress.clamp(0.0, 1.0),
+      math.pi * 2 * progress,
       false,
       progressPaint,
     );
@@ -629,6 +896,6 @@ class _ProgressPainter extends CustomPainter {
   bool shouldRepaint(
     covariant _ProgressPainter oldDelegate,
   ) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.completed != completed;
   }
 }
