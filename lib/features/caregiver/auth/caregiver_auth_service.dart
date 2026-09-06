@@ -74,6 +74,14 @@ class CaregiverAuthService {
     return sha256.convert(bytes).toString();
   }
 
+  /// Saves the caregiver and patient documents to Firestore.
+  ///
+  /// [patientId] must be the same ID created by
+  /// PatientProfileController earlier in the registration flow
+  /// (via createPatientId()). There is no fallback or default here
+  /// on purpose — a missing/empty ID is a bug upstream, not
+  /// something this method should silently paper over with a
+  /// shared placeholder like 'patient_001'.
   Future<void> saveCaregiverAndPatient({
     required String fullName,
     required String phoneNumber,
@@ -85,8 +93,12 @@ class CaregiverAuthService {
     required String patientName,
     required DateTime patientDob,
     required String patientLanguage,
-    String patientId = 'patient_001',
+    required String patientId,
   }) async {
+    if (patientId.trim().isEmpty) {
+      throw ArgumentError('patientId must not be empty.');
+    }
+
     final user = _auth.currentUser;
 
     if (user == null) {

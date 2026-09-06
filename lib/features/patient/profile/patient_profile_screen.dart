@@ -8,6 +8,7 @@ import '../../../core/localization/app_language.dart';
 import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/state/patient_name_controller.dart';
+import '../../../core/state/patient_profile_controller.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/speaker_button.dart';
@@ -267,6 +268,9 @@ class _PatientProfileScreenState
           return;
         }
 
+        final patientId =
+            patientProfileController.createPatientId();
+
         await CaregiverAuthService.instance.saveCaregiverAndPatient(
           fullName: registrationData.fullName,
           phoneNumber: registrationData.phoneNumber,
@@ -278,6 +282,7 @@ class _PatientProfileScreenState
           patientName: name,
           patientDob: _dob!,
           patientLanguage: _language.name,
+          patientId: patientId,
         );
       }
 
