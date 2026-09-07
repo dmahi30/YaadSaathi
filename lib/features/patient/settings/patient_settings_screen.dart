@@ -6,7 +6,7 @@ import '../../../core/localization/app_language_controller.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/state/app_settings_controller.dart';
-import '../../caregiver/auth/caregiver_auth_screen.dart';
+import '../../caregiver/pin_access/caregiver_pin_screen.dart';
 
 class PatientSettingsScreen extends StatelessWidget {
   const PatientSettingsScreen({super.key});
@@ -464,14 +464,13 @@ class PatientSettingsScreen extends StatelessWidget {
                         l10n.caregiverAccess,
                     value: '',
                     onTap: () {
-                      Navigator.of(context)
-                          .push(
+                      Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const CaregiverAuthScreen(),
-                        ),
-                      );
-                    },
+                          builder: (_) => 
+                            const CaregiverPinScreen(),
+                      ),
+                    );
+                  },
                   ),
 
                   // CALL CAREGIVER
