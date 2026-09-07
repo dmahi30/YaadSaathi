@@ -21,6 +21,10 @@ final Map<String, String> bengali = {
   'continueText': 'এগিয়ে যান',
   'photoUploadComingSoon': 'ছবি আপলোড শীঘ্রই আসছে',
 
+  // Profile Errors
+  'caregiverPinMissing': 'কেয়ারগিভার পিন পাওয়া যায়নি।',
+  'profileSaveFailed': 'প্রোফাইল সংরক্ষণ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।',
+
   // Patient Home
   'goodMorning': 'সুপ্রভাত',
   'online': 'অনলাইন',
@@ -122,7 +126,8 @@ final Map<String, String> bengali = {
   'sibling': 'ভাই / বোন',
   'other': 'অন্যান্য',
 
-    'enterOtp': 'ওটিপি লিখুন',
+  // OTP Verification
+  'enterOtp': 'ওটিপি লিখুন',
   'weveSentCodeTo': 'আমরা ৬-সংখ্যার কোড পাঠিয়েছি',
   'resendOtpIn': 'ওটিপি আবার পাঠান',
   'verify': 'যাচাই করুন',
@@ -130,17 +135,25 @@ final Map<String, String> bengali = {
   'resendOtp': 'ওটিপি আবার পাঠান',
   'otpDemoNotice': 'ডেমো মোড: চালিয়ে যেতে যেকোনো ৬টি সংখ্যা লিখুন',
   'otpIncomplete': 'অনুগ্রহ করে সবগুলো ৬টি সংখ্যা লিখুন',
+
+  // Create PIN
   'createPinTitle': '৪-সংখ্যার পিন তৈরি করুন',
-  'pinExplanation': 'এই পিনটি অ্যাপে কেয়ারগিভার সুবিধা ব্যবহারের জন্য প্রয়োজন হবে।',
+  'pinExplanation':
+      'এই পিনটি অ্যাপে কেয়ারগিভার সুবিধা ব্যবহারের জন্য প্রয়োজন হবে।',
   'showPin': 'পিন দেখান',
   'confirmPin': 'পিন নিশ্চিত করুন',
   'pinMismatch': 'পিন মিলছে না',
   'pinIncomplete': 'সবগুলো ৪টি সংখ্যা লিখুন',
   'keepInfoSafe': 'আপনার প্রিয়জনের তথ্য নিরাপদ রাখুন।',
+
+  // Consent
   'almostDone': 'প্রায় শেষ!',
-  'reviewAndAccept': 'চালিয়ে যেতে অনুগ্রহ করে পর্যালোচনা করে গ্রহণ করুন।',
+  'reviewAndAccept':
+      'চালিয়ে যেতে অনুগ্রহ করে পর্যালোচনা করে গ্রহণ করুন।',
   'agreeToThe': 'আমি সম্মত',
   'termsAndConditions': 'শর্তাবলী',
-  'consentDataUse': 'ব্যক্তিগতকৃত যত্ন এবং এআই-ভিত্তিক সুপারিশ প্রদানের জন্য ডেটা সংগ্রহ ও ব্যবহারে আমি সম্মতি দিচ্ছি।',
-  'dataSafeNotice': 'আপনার তথ্য আমাদের কাছে নিরাপদ। আপনার সম্মতি ছাড়া আমরা ব্যক্তিগত তথ্য শেয়ার করি না।',
+  'consentDataUse':
+      'ব্যক্তিগতকৃত যত্ন এবং এআই-ভিত্তিক সুপারিশ প্রদানের জন্য ডেটা সংগ্রহ ও ব্যবহারে আমি সম্মতি দিচ্ছি।',
+  'dataSafeNotice':
+      'আপনার তথ্য আমাদের কাছে নিরাপদ। আপনার সম্মতি ছাড়া আমরা ব্যক্তিগত তথ্য শেয়ার করি না।',
 };

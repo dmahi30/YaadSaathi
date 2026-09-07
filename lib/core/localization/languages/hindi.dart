@@ -21,6 +21,10 @@ final Map<String, String> hindi = {
   'continueText': 'आगे बढ़ें',
   'photoUploadComingSoon': 'फोटो अपलोड जल्द उपलब्ध होगा',
 
+  // Profile Errors
+  'caregiverPinMissing': 'केयरगिवर पिन उपलब्ध नहीं है।',
+  'profileSaveFailed': 'प्रोफ़ाइल सहेजी नहीं जा सकी। कृपया फिर कोशिश करें।',
+
   // Patient Home
   'goodMorning': 'सुप्रभात',
   'online': 'ऑनलाइन',
@@ -122,7 +126,8 @@ final Map<String, String> hindi = {
   'sibling': 'भाई / बहन',
   'other': 'अन्य',
 
-    'enterOtp': 'ओटीपी दर्ज करें',
+  // OTP Verification
+  'enterOtp': 'ओटीपी दर्ज करें',
   'weveSentCodeTo': 'हमने 6 अंकों का कोड भेजा है',
   'resendOtpIn': 'ओटीपी फिर से भेजें',
   'verify': 'सत्यापित करें',
@@ -130,17 +135,25 @@ final Map<String, String> hindi = {
   'resendOtp': 'ओटीपी फिर से भेजें',
   'otpDemoNotice': 'डेमो मोड: जारी रखने के लिए कोई भी 6 अंक दर्ज करें',
   'otpIncomplete': 'कृपया सभी 6 अंक दर्ज करें',
+
+  // Create PIN
   'createPinTitle': '4 अंकों का पिन बनाएँ',
-  'pinExplanation': 'यह पिन ऐप में देखभालकर्ता सुविधाओं तक पहुँचने के लिए उपयोग होगा।',
+  'pinExplanation':
+      'यह पिन ऐप में देखभालकर्ता सुविधाओं तक पहुँचने के लिए उपयोग होगा।',
   'showPin': 'पिन दिखाएँ',
   'confirmPin': 'पिन की पुष्टि करें',
   'pinMismatch': 'पिन मेल नहीं खाते',
   'pinIncomplete': 'सभी 4 अंक दर्ज करें',
   'keepInfoSafe': 'अपने प्रियजन की जानकारी सुरक्षित रखें।',
+
+  // Consent
   'almostDone': 'लगभग पूरा हुआ!',
-  'reviewAndAccept': 'जारी रखने के लिए कृपया समीक्षा करें और स्वीकार करें।',
+  'reviewAndAccept':
+      'जारी रखने के लिए कृपया समीक्षा करें और स्वीकार करें।',
   'agreeToThe': 'मैं सहमत हूँ',
   'termsAndConditions': 'नियम और शर्तें',
-  'consentDataUse': 'मैं व्यक्तिगत देखभाल और एआई-आधारित सुझावों के लिए डेटा के संग्रह और उपयोग के लिए सहमति देता/देती हूँ।',
-  'dataSafeNotice': 'आपका डेटा हमारे पास सुरक्षित है। हम आपकी सहमति के बिना व्यक्तिगत जानकारी साझा नहीं करते।',
+  'consentDataUse':
+      'मैं व्यक्तिगत देखभाल और एआई-आधारित सुझावों के लिए डेटा के संग्रह और उपयोग के लिए सहमति देता/देती हूँ।',
+  'dataSafeNotice':
+      'आपका डेटा हमारे पास सुरक्षित है। हम आपकी सहमति के बिना व्यक्तिगत जानकारी साझा नहीं करते।',
 };

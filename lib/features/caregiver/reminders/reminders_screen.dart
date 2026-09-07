@@ -16,8 +16,8 @@ class _CaregiverRemindersScreenState
     extends State<CaregiverRemindersScreen> {
   int _selectedTab = 0;
 
-  // Reminders are added by the caregiver through the UI.
-  // No demo reminder data is stored here.
+  // Reminder records are created only from caregiver input.
+  // No patient/user/demo data is hardcoded here.
   final List<_ReminderItem> _reminders = [];
 
   @override
@@ -76,7 +76,7 @@ class _CaregiverRemindersScreenState
           _circleButton(
             icon: Icons.volume_up_outlined,
             onTap: () {
-              // TTS can be connected here later.
+              // TTS can be connected later.
             },
           ),
         ],
@@ -479,206 +479,14 @@ class _CaregiverRemindersScreenState
   // ---------------------------------------------------------------------------
 
   Future<void> _showAddReminderDialog() async {
-    final titleController =
-        TextEditingController();
-
-    final descriptionController =
-        TextEditingController();
-
-    TimeOfDay? selectedTime;
-
-    _ReminderIconType selectedIcon =
-        _ReminderIconType.activity;
-
     final result =
         await showDialog<_ReminderItem>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (
-            context,
-            setDialogState,
-          ) {
-            return AlertDialog(
-              title: const Text(
-                'Add Reminder',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: titleController,
-                      textInputAction:
-                          TextInputAction.next,
-                      decoration:
-                          const InputDecoration(
-                        labelText:
-                            'Reminder title',
-                        hintText:
-                            'Enter reminder name',
-                        prefixIcon: Icon(
-                          Icons.edit_outlined,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller:
-                          descriptionController,
-                      maxLines: 2,
-                      decoration:
-                          const InputDecoration(
-                        labelText:
-                            'Description',
-                        hintText:
-                            'Add a short note',
-                        prefixIcon: Icon(
-                          Icons.notes_outlined,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    ListTile(
-                      contentPadding:
-                          EdgeInsets.zero,
-                      leading: const Icon(
-                        Icons.access_time_rounded,
-                        color:
-                            AppColors.primaryGreen,
-                      ),
-                      title: Text(
-                        selectedTime == null
-                            ? 'Choose time'
-                            : selectedTime!
-                                .format(context),
-                      ),
-                      onTap: () async {
-                        final picked =
-                            await showTimePicker(
-                          context: context,
-                          initialTime:
-                              TimeOfDay.now(),
-                        );
-
-                        if (picked != null) {
-                          setDialogState(() {
-                            selectedTime =
-                                picked;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<
-                        _ReminderIconType>(
-                      initialValue: selectedIcon,
-                      decoration:
-                          const InputDecoration(
-                        labelText:
-                            'Reminder type',
-                        prefixIcon: Icon(
-                          Icons.category_outlined,
-                        ),
-                      ),
-                      items:
-                          _ReminderIconType.values
-                              .map(
-                        (type) {
-                          return DropdownMenuItem<
-                              _ReminderIconType>(
-                            value: type,
-                            child: Text(
-                              type.label,
-                            ),
-                          );
-                        },
-                      ).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setDialogState(() {
-                            selectedIcon =
-                                value;
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(
-                      dialogContext,
-                    ).pop();
-                  },
-                  child: const Text(
-                    'Cancel',
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final title =
-                        titleController.text
-                            .trim();
-
-                    if (title.isEmpty ||
-                        selectedTime == null) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Please enter a title and choose a time.',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-
-                    final reminder =
-                        _ReminderItem(
-                      id: DateTime.now()
-                          .microsecondsSinceEpoch
-                          .toString(),
-                      title: title,
-                      description:
-                          descriptionController
-                              .text
-                              .trim(),
-                      time: selectedTime!
-                          .format(context),
-                      iconType: selectedIcon,
-                    );
-
-                    Navigator.of(
-                      dialogContext,
-                    ).pop(reminder);
-                  },
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        AppColors.primaryGreen,
-                    foregroundColor:
-                        Colors.white,
-                  ),
-                  child: const Text(
-                    'Add',
-                  ),
-                ),
-              ],
-            );
-          },
-        );
+      barrierDismissible: true,
+      builder: (_) {
+        return const _AddReminderDialog();
       },
     );
-
-    titleController.dispose();
-    descriptionController.dispose();
 
     if (!mounted || result == null) {
       return;
@@ -687,6 +495,206 @@ class _CaregiverRemindersScreenState
     setState(() {
       _reminders.add(result);
     });
+  }
+}
+
+// =============================================================================
+// ADD REMINDER DIALOG
+// =============================================================================
+
+class _AddReminderDialog extends StatefulWidget {
+  const _AddReminderDialog();
+
+  @override
+  State<_AddReminderDialog> createState() =>
+      _AddReminderDialogState();
+}
+
+class _AddReminderDialogState
+    extends State<_AddReminderDialog> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
+
+  TimeOfDay? _selectedTime;
+
+  _ReminderIconType _selectedIcon =
+      _ReminderIconType.activity;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text(
+        'Add Reminder',
+        style: TextStyle(
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _titleController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Reminder title',
+                hintText: 'Enter reminder name',
+                prefixIcon: Icon(
+                  Icons.edit_outlined,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _descriptionController,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                hintText: 'Add a short note',
+                prefixIcon: Icon(
+                  Icons.notes_outlined,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(
+                Icons.access_time_rounded,
+                color: AppColors.primaryGreen,
+              ),
+              title: Text(
+                _selectedTime == null
+                    ? 'Choose time'
+                    : _selectedTime!.format(context),
+              ),
+              onTap: _chooseTime,
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<_ReminderIconType>(
+              initialValue: _selectedIcon,
+              decoration: const InputDecoration(
+                labelText: 'Reminder type',
+                prefixIcon: Icon(
+                  Icons.category_outlined,
+                ),
+              ),
+              items: _ReminderIconType.values
+                  .map(
+                    (type) {
+                      return DropdownMenuItem<
+                          _ReminderIconType>(
+                        value: type,
+                        child: Text(
+                          type.label,
+                        ),
+                      );
+                    },
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
+                setState(() {
+                  _selectedIcon = value;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text(
+            'Cancel',
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _addReminder,
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                AppColors.primaryGreen,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text(
+            'Add',
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // TIME PICKER
+  // ---------------------------------------------------------------------------
+
+  Future<void> _chooseTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (!mounted || picked == null) {
+      return;
+    }
+
+    setState(() {
+      _selectedTime = picked;
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADD
+  // ---------------------------------------------------------------------------
+
+  void _addReminder() {
+    final title = _titleController.text.trim();
+    final description =
+        _descriptionController.text.trim();
+
+    if (title.isEmpty || _selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please enter a title and choose a time.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final reminder = _ReminderItem(
+      id: DateTime.now()
+          .microsecondsSinceEpoch
+          .toString(),
+      title: title,
+      description: description,
+      time: _selectedTime!.format(context),
+      iconType: _selectedIcon,
+    );
+
+    Navigator.of(context).pop(reminder);
   }
 }
 

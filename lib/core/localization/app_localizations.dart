@@ -28,6 +28,10 @@ class AppLocalizations {
   final String continueText;
   final String photoUploadComingSoon;
 
+  // Profile Errors
+  final String caregiverPinMissing;
+  final String profileSaveFailed;
+
   // Patient Home
   final String goodMorning;
   final String memoryActivity;
@@ -168,6 +172,8 @@ class AppLocalizations {
     required this.preferredLanguage,
     required this.continueText,
     required this.photoUploadComingSoon,
+    required this.caregiverPinMissing,
+    required this.profileSaveFailed,
     required this.goodMorning,
     required this.memoryActivity,
     required this.memoryCircle,
@@ -284,6 +290,8 @@ class AppLocalizations {
       preferredLanguage: map['preferredLanguage']!,
       continueText: map['continueText']!,
       photoUploadComingSoon: map['photoUploadComingSoon']!,
+      caregiverPinMissing: map['caregiverPinMissing']!,
+      profileSaveFailed: map['profileSaveFailed']!,
       goodMorning: map['goodMorning']!,
       memoryActivity: map['memoryActivity']!,
       memoryCircle: map['memoryCircle']!,
@@ -335,7 +343,8 @@ class AppLocalizations {
       appointment: map['appointment']!,
       tomorrow: map['tomorrow']!,
       welcomeCaregiver: map['welcomeCaregiver']!,
-      togetherLetsMakeEveryDayBrighter: map['togetherLetsMakeEveryDayBrighter']!,
+      togetherLetsMakeEveryDayBrighter:
+          map['togetherLetsMakeEveryDayBrighter']!,
       signIn: map['signIn']!,
       alreadyHaveAnAccount: map['alreadyHaveAnAccount']!,
       registerAsCaregiver: map['registerAsCaregiver']!,
@@ -424,12 +433,16 @@ class AppLocalizations {
 
   static final AppLocalizations _english =
       AppLocalizations.fromMap(english, _englishFamilyNames);
+
   static final AppLocalizations _hindi =
       AppLocalizations.fromMap(hindi, _hindiFamilyNames);
+
   static final AppLocalizations _marathi =
       AppLocalizations.fromMap(marathi, _marathiFamilyNames);
+
   static final AppLocalizations _bengali =
       AppLocalizations.fromMap(bengali, _bengaliFamilyNames);
+
   static final AppLocalizations _assamese =
       AppLocalizations.fromMap(assamese, _assameseFamilyNames);
 

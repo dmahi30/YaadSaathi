@@ -21,6 +21,10 @@ final Map<String, String> english = {
   'continueText': 'Continue',
   'photoUploadComingSoon': 'Photo upload coming soon',
 
+  // Profile Errors
+  'caregiverPinMissing': 'Caregiver PIN is missing.',
+  'profileSaveFailed': 'Unable to save the profile. Please try again.',
+
   // Patient Home
   'goodMorning': 'Good Morning',
   'online': 'Online',
