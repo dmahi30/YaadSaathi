@@ -9,6 +9,7 @@ import '../../../core/services/sync_service.dart';
 import '../../../core/state/patient_name_controller.dart';
 import '../../../core/state/patient_profile_controller.dart';
 import '../progress/progress_screen.dart';
+import '../reminders/reminders_screen.dart';
 
 class CaregiverDashboardScreen extends StatelessWidget {
   const CaregiverDashboardScreen({
@@ -33,7 +34,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
             bottom: false,
             child: _buildBody(context),
           ),
-          bottomNavigationBar: _buildBottomNavigation(context),
+          bottomNavigationBar:
+              _buildBottomNavigation(context),
         );
       },
     );
@@ -62,10 +64,12 @@ class CaregiverDashboardScreen extends StatelessWidget {
       );
     }
 
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    return StreamBuilder<
+        QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
-        final sessions = snapshot.data?.docs ?? [];
+        final sessions =
+            snapshot.data?.docs ?? [];
 
         return _buildDashboardContent(
           context,
@@ -81,17 +85,24 @@ class CaregiverDashboardScreen extends StatelessWidget {
 
   Widget _buildDashboardContent(
     BuildContext context,
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    List<
+        QueryDocumentSnapshot<
+            Map<String, dynamic>>> sessions,
   ) {
     final patientName =
-        PatientNameController.instance.name.trim().isNotEmpty
+        PatientNameController.instance.name
+                .trim()
+                .isNotEmpty
             ? PatientNameController.instance.name.trim()
-            : patientProfileController.fullName.trim();
+            : patientProfileController.fullName
+                .trim();
 
-    final displayName = patientName.isEmpty ? 'Patient' : patientName;
+    final displayName =
+        patientName.isEmpty ? 'Patient' : patientName;
 
     final age = patientProfileController.age;
-    final language = patientProfileController.languageName;
+    final language =
+        patientProfileController.languageName;
 
     final faceScore = _getScore(
       sessions,
@@ -139,7 +150,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
       ],
     );
 
-    final completedActivities = sessions.length;
+    final completedActivities =
+        sessions.length;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
@@ -149,7 +161,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
         24,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           // ------------------------------------------------------
           // HEADER
@@ -167,6 +180,9 @@ class CaregiverDashboardScreen extends StatelessWidget {
               const Expanded(
                 child: Text(
                   'Caregiver Dashboard',
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.w800,
@@ -175,9 +191,11 @@ class CaregiverDashboardScreen extends StatelessWidget {
                 ),
               ),
               _roundButton(
-                icon: Icons.volume_up_outlined,
+                icon:
+                    Icons.volume_up_outlined,
                 onTap: () {
-                  // Speaker action can be connected to TTS later.
+                  // Speaker action can be connected
+                  // to TTS later.
                 },
               ),
             ],
@@ -194,7 +212,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius:
+                  BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
                   blurRadius: 12,
@@ -206,40 +225,43 @@ class CaregiverDashboardScreen extends StatelessWidget {
               ],
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
-                // Patient icon
                 Container(
                   width: 62,
                   height: 62,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.primaryGreen.withValues(
-                      alpha: 0.12,
-                    ),
+                    color: AppColors.primaryGreen
+                        .withValues(alpha: 0.12),
                   ),
                   child: const Icon(
                     Icons.person,
                     size: 34,
-                    color: AppColors.primaryGreen,
+                    color:
+                        AppColors.primaryGreen,
                   ),
                 ),
 
                 const SizedBox(width: 14),
 
-                // Patient information
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       Text(
                         displayName,
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        overflow:
+                            TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
+                          fontWeight:
+                              FontWeight.w800,
+                          color:
+                              AppColors.textDark,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -247,12 +269,12 @@ class CaregiverDashboardScreen extends StatelessWidget {
                         'Patient',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textMedium,
+                          color:
+                              AppColors.textMedium,
                         ),
                       ),
                       const SizedBox(height: 8),
 
-                      // Chips wrap instead of forcing a single row.
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
@@ -275,7 +297,6 @@ class CaregiverDashboardScreen extends StatelessWidget {
 
                 const SizedBox(width: 4),
 
-                // Fixed compact width prevents horizontal overflow.
                 SizedBox(
                   width: 88,
                   child: TextButton(
@@ -284,19 +305,23 @@ class CaregiverDashboardScreen extends StatelessWidget {
                       // can be connected here.
                     },
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
+                      padding:
+                          const EdgeInsets.symmetric(
                         horizontal: 2,
                         vertical: 8,
                       ),
                       minimumSize: Size.zero,
                       tapTargetSize:
-                          MaterialTapTargetSize.shrinkWrap,
+                          MaterialTapTargetSize
+                              .shrinkWrap,
                     ),
                     child: const Text(
                       'View Profile',
-                      textAlign: TextAlign.center,
+                      textAlign:
+                          TextAlign.center,
                       style: TextStyle(
-                        fontWeight: FontWeight.w700,
+                        fontWeight:
+                            FontWeight.w700,
                         fontSize: 13,
                       ),
                     ),
@@ -344,13 +369,15 @@ class CaregiverDashboardScreen extends StatelessWidget {
 
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 18,
               vertical: 22,
             ),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius:
+                  BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
                   blurRadius: 12,
@@ -369,26 +396,35 @@ class CaregiverDashboardScreen extends StatelessWidget {
                       width: 108,
                       height: 108,
                       child: CustomPaint(
-                        painter: _ProgressPainter(
-                          completed: completedActivities,
+                        painter:
+                            _ProgressPainter(
+                          completed:
+                              completedActivities,
                         ),
                         child: Center(
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisSize:
+                                MainAxisSize.min,
                             children: [
                               Text(
                                 '$completedActivities',
-                                style: const TextStyle(
+                                style:
+                                    const TextStyle(
                                   fontSize: 25,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textDark,
+                                  fontWeight:
+                                      FontWeight
+                                          .w800,
+                                  color: AppColors
+                                      .textDark,
                                 ),
                               ),
                               const Text(
                                 'Completed',
-                                style: TextStyle(
+                                style:
+                                    TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.textMedium,
+                                  color: AppColors
+                                      .textMedium,
                                 ),
                               ),
                             ],
@@ -396,27 +432,35 @@ class CaregiverDashboardScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+
                     const SizedBox(width: 22),
+
                     Expanded(
                       child: Column(
                         children: [
                           _activityRow(
-                            icon:
-                                Icons.face_retouching_natural,
+                            icon: Icons
+                                .face_retouching_natural,
                             title: 'Faces',
                             score: faceScore,
                             total: faceTotal,
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(
+                            height: 14,
+                          ),
                           _activityRow(
-                            icon: Icons.mic_none,
+                            icon:
+                                Icons.mic_none,
                             title: 'Voices',
                             score: voiceScore,
                             total: voiceTotal,
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(
+                            height: 14,
+                          ),
                           _activityRow(
-                            icon: Icons.schedule,
+                            icon:
+                                Icons.schedule,
                             title: 'Routines',
                             score: routineScore,
                             total: routineTotal,
@@ -451,31 +495,34 @@ class CaregiverDashboardScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withValues(
-                alpha: 0.08,
-              ),
-              borderRadius: BorderRadius.circular(22),
+              color: AppColors.primaryGreen
+                  .withValues(alpha: 0.08),
+              borderRadius:
+                  BorderRadius.circular(22),
               border: Border.all(
-                color: AppColors.primaryGreen.withValues(
-                  alpha: 0.12,
-                ),
+                color: AppColors.primaryGreen
+                    .withValues(alpha: 0.12),
               ),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.primaryGreen.withValues(
+                    color: AppColors
+                        .primaryGreen
+                        .withValues(
                       alpha: 0.14,
                     ),
                   ),
                   child: const Icon(
                     Icons.auto_awesome,
-                    color: AppColors.primaryGreen,
+                    color:
+                        AppColors.primaryGreen,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -487,10 +534,12 @@ class CaregiverDashboardScreen extends StatelessWidget {
                       faceTotal,
                       completedActivities,
                     ),
-                    style: const TextStyle(
+                    style:
+                        const TextStyle(
                       fontSize: 15,
                       height: 1.5,
-                      color: AppColors.textDark,
+                      color:
+                          AppColors.textDark,
                     ),
                   ),
                 ),
@@ -558,10 +607,10 @@ class CaregiverDashboardScreen extends StatelessWidget {
         vertical: 5,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primaryGreen.withValues(
-          alpha: 0.08,
-        ),
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.primaryGreen
+            .withValues(alpha: 0.08),
+        borderRadius:
+            BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -569,7 +618,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
           Icon(
             icon,
             size: 14,
-            color: AppColors.primaryGreen,
+            color:
+                AppColors.primaryGreen,
           ),
           const SizedBox(width: 4),
           Text(
@@ -599,9 +649,11 @@ class CaregiverDashboardScreen extends StatelessWidget {
       elevation: 2,
       child: InkWell(
         onTap: onTap,
-        customBorder: const CircleBorder(),
+        customBorder:
+            const CircleBorder(),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding:
+              const EdgeInsets.all(12),
           child: Icon(
             icon,
             size: 20,
@@ -616,11 +668,14 @@ class CaregiverDashboardScreen extends StatelessWidget {
   // BOTTOM NAVIGATION
   // ------------------------------------------------------------
 
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget _buildBottomNavigation(
+    BuildContext context,
+  ) {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(
+        padding:
+            const EdgeInsets.fromLTRB(
           12,
           8,
           12,
@@ -639,27 +694,29 @@ class CaregiverDashboardScreen extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment:
+              MainAxisAlignment.spaceAround,
           children: [
+            // HOME
             _navItem(
-              icon: Icons.home_outlined,
+              icon:
+                  Icons.home_outlined,
               label: 'Home',
               selected: true,
               onTap: () {},
             ),
 
-            // --------------------------------------------------
             // PROGRESS
-            // --------------------------------------------------
-
             _navItem(
-              icon: Icons.bar_chart_outlined,
+              icon:
+                  Icons.bar_chart_outlined,
               label: 'Progress',
               selected: false,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => ProgressScreen(
+                    builder: (_) =>
+                        ProgressScreen(
                       patientId: patientId,
                     ),
                   ),
@@ -667,23 +724,26 @@ class CaregiverDashboardScreen extends StatelessWidget {
               },
             ),
 
-            // --------------------------------------------------
-            // REMINDER
-            // --------------------------------------------------
-
+            // REMINDERS
             _navItem(
-              icon: Icons.notifications_none,
+              icon:
+                  Icons.notifications_none,
               label: 'Reminder',
               selected: false,
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const CaregiverRemindersScreen(),
+                  ),
+                );
+              },
             ),
 
-            // --------------------------------------------------
             // SETTINGS
-            // --------------------------------------------------
-
             _navItem(
-              icon: Icons.settings_outlined,
+              icon:
+                  Icons.settings_outlined,
               label: 'Settings',
               selected: false,
               onTap: () {},
@@ -702,14 +762,17 @@ class CaregiverDashboardScreen extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius:
+          BorderRadius.circular(14),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
+        padding:
+            const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 5,
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize:
+              MainAxisSize.min,
           children: [
             Icon(
               icon,
@@ -742,7 +805,9 @@ class CaregiverDashboardScreen extends StatelessWidget {
   // ------------------------------------------------------------
 
   int _getScore(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    List<
+        QueryDocumentSnapshot<
+            Map<String, dynamic>>> sessions,
     String gameType,
   ) {
     int correct = 0;
@@ -752,7 +817,10 @@ class CaregiverDashboardScreen extends StatelessWidget {
 
       if (data['gameType'] == gameType) {
         correct +=
-            (data['correctAnswers'] as num?)?.toInt() ?? 0;
+            (data['correctAnswers']
+                        as num?)
+                    ?.toInt() ??
+                0;
       }
     }
 
@@ -760,7 +828,9 @@ class CaregiverDashboardScreen extends StatelessWidget {
   }
 
   int _getTotal(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    List<
+        QueryDocumentSnapshot<
+            Map<String, dynamic>>> sessions,
     String gameType,
   ) {
     int total = 0;
@@ -770,7 +840,10 @@ class CaregiverDashboardScreen extends StatelessWidget {
 
       if (data['gameType'] == gameType) {
         total +=
-            (data['totalQuestions'] as num?)?.toInt() ?? 0;
+            (data['totalQuestions']
+                        as num?)
+                    ?.toInt() ??
+                0;
       }
     }
 
@@ -778,7 +851,9 @@ class CaregiverDashboardScreen extends StatelessWidget {
   }
 
   int _getCategoryScore(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    List<
+        QueryDocumentSnapshot<
+            Map<String, dynamic>>> sessions,
     List<String> gameTypes,
   ) {
     int score = 0;
@@ -787,9 +862,13 @@ class CaregiverDashboardScreen extends StatelessWidget {
       final data = doc.data();
       final type = data['gameType'];
 
-      if (type is String && gameTypes.contains(type)) {
+      if (type is String &&
+          gameTypes.contains(type)) {
         score +=
-            (data['correctAnswers'] as num?)?.toInt() ?? 0;
+            (data['correctAnswers']
+                        as num?)
+                    ?.toInt() ??
+                0;
       }
     }
 
@@ -797,7 +876,9 @@ class CaregiverDashboardScreen extends StatelessWidget {
   }
 
   int _getCategoryTotal(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
+    List<
+        QueryDocumentSnapshot<
+            Map<String, dynamic>>> sessions,
     List<String> gameTypes,
   ) {
     int total = 0;
@@ -806,9 +887,13 @@ class CaregiverDashboardScreen extends StatelessWidget {
       final data = doc.data();
       final type = data['gameType'];
 
-      if (type is String && gameTypes.contains(type)) {
+      if (type is String &&
+          gameTypes.contains(type)) {
         total +=
-            (data['totalQuestions'] as num?)?.toInt() ?? 0;
+            (data['totalQuestions']
+                        as num?)
+                    ?.toInt() ??
+                0;
       }
     }
 
@@ -838,7 +923,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
           'More activities will help build a clearer picture of progress.';
     }
 
-    final percentage = (faceScore / faceTotal) * 100;
+    final percentage =
+        (faceScore / faceTotal) * 100;
 
     if (percentage >= 80) {
       return '$patientName is doing well with memory activities. '
@@ -859,7 +945,8 @@ class CaregiverDashboardScreen extends StatelessWidget {
 // PROGRESS PAINTER
 // --------------------------------------------------------------
 
-class _ProgressPainter extends CustomPainter {
+class _ProgressPainter
+    extends CustomPainter {
   _ProgressPainter({
     required this.completed,
   });
@@ -877,21 +964,35 @@ class _ProgressPainter extends CustomPainter {
     );
 
     final radius =
-        math.min(size.width, size.height) / 2 - 7;
+        math.min(
+              size.width,
+              size.height,
+            ) /
+            2 -
+        7;
 
-    final backgroundPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9
-      ..strokeCap = StrokeCap.round
-      ..color = AppColors.primaryGreen.withValues(
-        alpha: 0.12,
-      );
+    final backgroundPaint =
+        Paint()
+          ..style =
+              PaintingStyle.stroke
+          ..strokeWidth = 9
+          ..strokeCap =
+              StrokeCap.round
+          ..color =
+              AppColors.primaryGreen
+                  .withValues(
+            alpha: 0.12,
+          );
 
-    final progressPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9
-      ..strokeCap = StrokeCap.round
-      ..color = AppColors.primaryGreen;
+    final progressPaint =
+        Paint()
+          ..style =
+              PaintingStyle.stroke
+          ..strokeWidth = 9
+          ..strokeCap =
+              StrokeCap.round
+          ..color =
+              AppColors.primaryGreen;
 
     canvas.drawCircle(
       center,
@@ -899,7 +1000,8 @@ class _ProgressPainter extends CustomPainter {
       backgroundPaint,
     );
 
-    final progress = completed > 0 ? 1.0 : 0.0;
+    final progress =
+        completed > 0 ? 1.0 : 0.0;
 
     canvas.drawArc(
       Rect.fromCircle(
@@ -915,8 +1017,10 @@ class _ProgressPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(
-    covariant _ProgressPainter oldDelegate,
+    covariant _ProgressPainter
+        oldDelegate,
   ) {
-    return oldDelegate.completed != completed;
+    return oldDelegate.completed !=
+        completed;
   }
 }
