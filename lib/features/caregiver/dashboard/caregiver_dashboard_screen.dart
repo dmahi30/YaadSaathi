@@ -8,7 +8,10 @@ import '../../../core/localization/app_language_controller.dart';
 import '../../../core/services/sync_service.dart';
 import '../../../core/state/patient_name_controller.dart';
 import '../../../core/state/patient_profile_controller.dart';
+import '../family/family_data_screen.dart' as family;
 import '../progress/progress_screen.dart';
+import '../reminders/reminders_screen.dart';
+import '../settings/caregiver_settings_screen.dart';
 
 class CaregiverDashboardScreen extends StatelessWidget {
   const CaregiverDashboardScreen({
@@ -39,23 +42,14 @@ class CaregiverDashboardScreen extends StatelessWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ===========================================================================
   // DASHBOARD BODY
-  // ------------------------------------------------------------
+  // ===========================================================================
 
   Widget _buildBody(BuildContext context) {
-    final selectedPatientId =
-        patientId?.trim().isNotEmpty == true
-            ? patientId!.trim()
-            : patientProfileController.patientId.trim();
+    final selectedPatientId = _getPatientId();
 
-    final stream = selectedPatientId.isEmpty
-        ? null
-        : SyncService.gameSessionsStream(
-            patientId: selectedPatientId,
-          );
-
-    if (stream == null) {
+    if (selectedPatientId.isEmpty) {
       return _buildDashboardContent(
         context,
         const [],
@@ -63,7 +57,9 @@ class CaregiverDashboardScreen extends StatelessWidget {
     }
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: stream,
+      stream: SyncService.gameSessionsStream(
+        patientId: selectedPatientId,
+      ),
       builder: (context, snapshot) {
         final sessions = snapshot.data?.docs ?? [];
 
@@ -75,20 +71,28 @@ class CaregiverDashboardScreen extends StatelessWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  String _getPatientId() {
+    final passedId = patientId?.trim();
+
+    if (passedId != null && passedId.isNotEmpty) {
+      return passedId;
+    }
+
+    return patientProfileController.patientId.trim();
+  }
+
+  // ===========================================================================
   // DASHBOARD CONTENT
-  // ------------------------------------------------------------
+  // ===========================================================================
 
   Widget _buildDashboardContent(
     BuildContext context,
     List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
   ) {
-    final patientName =
-        PatientNameController.instance.name.trim().isNotEmpty
-            ? PatientNameController.instance.name.trim()
-            : patientProfileController.fullName.trim();
+    final patientName = _getPatientName();
 
-    final displayName = patientName.isEmpty ? 'Patient' : patientName;
+    final displayName =
+        patientName.isEmpty ? 'Patient' : patientName;
 
     final age = patientProfileController.age;
     final language = patientProfileController.languageName;
@@ -151,290 +155,34 @@ class CaregiverDashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ------------------------------------------------------
-          // HEADER
-          // ------------------------------------------------------
-
-          Row(
-            children: [
-              _roundButton(
-                icon: Icons.arrow_back_ios_new,
-                onTap: () {
-                  Navigator.of(context).maybePop();
-                },
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Text(
-                  'Caregiver Dashboard',
-                  style: TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
-                  ),
-                ),
-              ),
-              _roundButton(
-                icon: Icons.volume_up_outlined,
-                onTap: () {
-                  // Speaker action can be connected to TTS later.
-                },
-              ),
-            ],
-          ),
+          _buildHeader(context),
 
           const SizedBox(height: 22),
 
-          // ------------------------------------------------------
-          // PATIENT CARD
-          // ------------------------------------------------------
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                  color: Colors.black.withValues(
-                    alpha: 0.06,
-                  ),
-                ),
-              ],
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Patient icon
-                Container(
-                  width: 62,
-                  height: 62,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primaryGreen.withValues(
-                      alpha: 0.12,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 34,
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-
-                const SizedBox(width: 14),
-
-                // Patient information
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Patient',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textMedium,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Chips wrap instead of forcing a single row.
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          if (age != null)
-                            _infoChip(
-                              Icons.cake_outlined,
-                              'Age: $age',
-                            ),
-                          if (language.isNotEmpty)
-                            _infoChip(
-                              Icons.language,
-                              'Lang: $language',
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 4),
-
-                // Fixed compact width prevents horizontal overflow.
-                SizedBox(
-                  width: 88,
-                  child: TextButton(
-                    onPressed: () {
-                      // Patient profile navigation
-                      // can be connected here.
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 2,
-                        vertical: 8,
-                      ),
-                      minimumSize: Size.zero,
-                      tapTargetSize:
-                          MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      'View Profile',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _buildPatientCard(
+            context,
+            displayName: displayName,
+            age: age,
+            language: language,
           ),
 
           const SizedBox(height: 26),
 
-          // ------------------------------------------------------
-          // TODAY'S ACTIVITY HEADER
-          // ------------------------------------------------------
-
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  "Today's Activity",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {},
-                child: const Text(
-                  'See All',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          _buildActivityHeader(context),
 
           const SizedBox(height: 12),
 
-          // ------------------------------------------------------
-          // ACTIVITY CARD
-          // ------------------------------------------------------
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 22,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                  color: Colors.black.withValues(
-                    alpha: 0.06,
-                  ),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 108,
-                      height: 108,
-                      child: CustomPaint(
-                        painter: _ProgressPainter(
-                          completed: completedActivities,
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '$completedActivities',
-                                style: const TextStyle(
-                                  fontSize: 25,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textDark,
-                                ),
-                              ),
-                              const Text(
-                                'Completed',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 22),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          _activityRow(
-                            icon:
-                                Icons.face_retouching_natural,
-                            title: 'Faces',
-                            score: faceScore,
-                            total: faceTotal,
-                          ),
-                          const SizedBox(height: 14),
-                          _activityRow(
-                            icon: Icons.mic_none,
-                            title: 'Voices',
-                            score: voiceScore,
-                            total: voiceTotal,
-                          ),
-                          const SizedBox(height: 14),
-                          _activityRow(
-                            icon: Icons.schedule,
-                            title: 'Routines',
-                            score: routineScore,
-                            total: routineTotal,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          _buildActivityCard(
+            faceScore: faceScore,
+            faceTotal: faceTotal,
+            voiceScore: voiceScore,
+            voiceTotal: voiceTotal,
+            routineScore: routineScore,
+            routineTotal: routineTotal,
+            completedActivities: completedActivities,
           ),
 
           const SizedBox(height: 26),
-
-          // ------------------------------------------------------
-          // AI SUMMARY
-          // ------------------------------------------------------
 
           const Text(
             'AI Summary',
@@ -447,55 +195,11 @@ class CaregiverDashboardScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withValues(
-                alpha: 0.08,
-              ),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: AppColors.primaryGreen.withValues(
-                  alpha: 0.12,
-                ),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primaryGreen.withValues(
-                      alpha: 0.14,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    _buildAiSummary(
-                      displayName,
-                      faceScore,
-                      faceTotal,
-                      completedActivities,
-                    ),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      height: 1.5,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _buildAiSummary(
+            displayName: displayName,
+            faceScore: faceScore,
+            faceTotal: faceTotal,
+            completedActivities: completedActivities,
           ),
 
           const SizedBox(height: 20),
@@ -504,9 +208,328 @@ class CaregiverDashboardScreen extends StatelessWidget {
     );
   }
 
-  // ------------------------------------------------------------
-  // ACTIVITY ROW
-  // ------------------------------------------------------------
+  String _getPatientName() {
+    final nameFromController =
+        PatientNameController.instance.name.trim();
+
+    if (nameFromController.isNotEmpty) {
+      return nameFromController;
+    }
+
+    return patientProfileController.fullName.trim();
+  }
+
+  // ===========================================================================
+  // HEADER
+  // ===========================================================================
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        _circleButton(
+          icon: Icons.arrow_back_ios_new_rounded,
+          onTap: () {
+            Navigator.of(context).maybePop();
+          },
+        ),
+
+        const SizedBox(width: 14),
+
+        const Expanded(
+          child: Text(
+            'Caregiver Dashboard',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
+
+        _circleButton(
+          icon: Icons.volume_up_outlined,
+          onTap: () {
+            // Speaker action can be connected to TTS.
+          },
+        ),
+      ],
+    );
+  }
+
+  // ===========================================================================
+  // PATIENT CARD
+  // ===========================================================================
+
+  Widget _buildPatientCard(
+    BuildContext context, {
+    required String displayName,
+    required int? age,
+    required String language,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+            color: Colors.black.withValues(
+              alpha: 0.06,
+            ),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primaryGreen.withValues(
+                alpha: 0.12,
+              ),
+            ),
+            child: const Icon(
+              Icons.person_rounded,
+              size: 34,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                const Text(
+                  'Patient',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textMedium,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    if (age != null)
+                      _infoChip(
+                        Icons.cake_outlined,
+                        'Age: $age',
+                      ),
+
+                    if (language.isNotEmpty)
+                      _infoChip(
+                        Icons.language_rounded,
+                        'Lang: $language',
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          SizedBox(
+            width: 82,
+            child: TextButton(
+              onPressed: () {
+                _openPatientProfile(context);
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 2,
+                  vertical: 8,
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize:
+                    MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'View Profile',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // TODAY'S ACTIVITY
+  // ===========================================================================
+
+  Widget _buildActivityHeader(
+    BuildContext context,
+  ) {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            "Today's Activity",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
+
+        TextButton(
+          onPressed: () {
+            _openProgress(context);
+          },
+          child: const Text(
+            'See All',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ===========================================================================
+  // ACTIVITY CARD
+  // ===========================================================================
+
+  Widget _buildActivityCard({
+    required int faceScore,
+    required int faceTotal,
+    required int voiceScore,
+    required int voiceTotal,
+    required int routineScore,
+    required int routineTotal,
+    required int completedActivities,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: 22,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+            color: Colors.black.withValues(
+              alpha: 0.06,
+            ),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 108,
+                height: 108,
+                child: CustomPaint(
+                  painter: _ProgressPainter(
+                    completed: completedActivities,
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$completedActivities',
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight:
+                                FontWeight.w800,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        const Text(
+                          'Completed',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color:
+                                AppColors.textMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 22),
+
+              Expanded(
+                child: Column(
+                  children: [
+                    _activityRow(
+                      icon:
+                          Icons.face_retouching_natural,
+                      title: 'Faces',
+                      score: faceScore,
+                      total: faceTotal,
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    _activityRow(
+                      icon: Icons.mic_none_rounded,
+                      title: 'Voices',
+                      score: voiceScore,
+                      total: voiceTotal,
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    _activityRow(
+                      icon: Icons.schedule_rounded,
+                      title: 'Routines',
+                      score: routineScore,
+                      total: routineTotal,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _activityRow({
     required IconData icon,
@@ -521,7 +544,9 @@ class CaregiverDashboardScreen extends StatelessWidget {
           size: 22,
           color: AppColors.primaryGreen,
         ),
+
         const SizedBox(width: 10),
+
         Expanded(
           child: Text(
             title,
@@ -532,6 +557,7 @@ class CaregiverDashboardScreen extends StatelessWidget {
             ),
           ),
         ),
+
         Text(
           '$score/$total',
           style: const TextStyle(
@@ -544,9 +570,117 @@ class CaregiverDashboardScreen extends StatelessWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ===========================================================================
+  // AI SUMMARY
+  // ===========================================================================
+
+  Widget _buildAiSummary({
+    required String displayName,
+    required int faceScore,
+    required int faceTotal,
+    required int completedActivities,
+  }) {
+    final summary =
+        _createAiSummary(
+      displayName: displayName,
+      faceScore: faceScore,
+      faceTotal: faceTotal,
+      completedActivities: completedActivities,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primaryGreen.withValues(
+          alpha: 0.08,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.primaryGreen.withValues(
+            alpha: 0.12,
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primaryGreen
+                  .withValues(alpha: 0.14),
+            ),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Text(
+              summary,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.5,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _createAiSummary({
+    required String displayName,
+    required int faceScore,
+    required int faceTotal,
+    required int completedActivities,
+  }) {
+    if (completedActivities == 0) {
+      return '$displayName has not completed any '
+          'activities yet. Once activities are completed, '
+          'the dashboard will show progress and helpful '
+          'insights here.';
+    }
+
+    if (faceTotal == 0) {
+      return '$displayName has completed '
+          '$completedActivities '
+          '${completedActivities == 1 ? 'activity' : 'activities'}. '
+          'More activities will help build a clearer '
+          'picture of progress.';
+    }
+
+    final percentage =
+        (faceScore / faceTotal) * 100;
+
+    if (percentage >= 80) {
+      return '$displayName is doing well with memory '
+          'activities. Face and name recognition is '
+          'showing strong performance.';
+    }
+
+    if (percentage >= 50) {
+      return '$displayName is making steady progress. '
+          'Regular short practice sessions may help '
+          'strengthen memory.';
+    }
+
+    return '$displayName may benefit from gentle, '
+        'repeated practice. Keep activities short, '
+        'positive, and comfortable.';
+  }
+
+  // ===========================================================================
   // INFO CHIP
-  // ------------------------------------------------------------
+  // ===========================================================================
 
   Widget _infoChip(
     IconData icon,
@@ -585,45 +719,20 @@ class CaregiverDashboardScreen extends StatelessWidget {
     );
   }
 
-  // ------------------------------------------------------------
-  // ROUND BUTTON
-  // ------------------------------------------------------------
+  // ===========================================================================
+  // NAVIGATION
+  // ===========================================================================
 
-  Widget _roundButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      shape: const CircleBorder(),
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppColors.textDark,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------
-  // BOTTOM NAVIGATION
-  // ------------------------------------------------------------
-
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget _buildBottomNavigation(
+    BuildContext context,
+  ) {
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(
-          12,
+          4,
           8,
-          12,
+          4,
           8,
         ),
         decoration: BoxDecoration(
@@ -639,54 +748,57 @@ class CaregiverDashboardScreen extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment:
+              MainAxisAlignment.spaceAround,
           children: [
-            _navItem(
-              icon: Icons.home_outlined,
+            // HOME
+            _BottomNavItem(
+              icon: Icons.home_rounded,
               label: 'Home',
               selected: true,
-              onTap: () {},
-            ),
-
-            // --------------------------------------------------
-            // PROGRESS
-            // --------------------------------------------------
-
-            _navItem(
-              icon: Icons.bar_chart_outlined,
-              label: 'Progress',
-              selected: false,
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ProgressScreen(
-                      patientId: patientId,
-                    ),
-                  ),
-                );
+                // Already on the caregiver dashboard.
               },
             ),
 
-            // --------------------------------------------------
-            // REMINDER
-            // --------------------------------------------------
-
-            _navItem(
-              icon: Icons.notifications_none,
-              label: 'Reminder',
+            // PROGRESS
+            _BottomNavItem(
+              icon: Icons.bar_chart_rounded,
+              label: 'Progress',
               selected: false,
-              onTap: () {},
+              onTap: () {
+                _openProgress(context);
+              },
             ),
 
-            // --------------------------------------------------
-            // SETTINGS
-            // --------------------------------------------------
+            // REMINDERS
+            _BottomNavItem(
+              icon: Icons.notifications_rounded,
+              label: 'Reminders',
+              selected: false,
+              onTap: () {
+                _openReminders(context);
+              },
+            ),
 
-            _navItem(
-              icon: Icons.settings_outlined,
+            // FAMILY
+            _BottomNavItem(
+              icon: Icons.groups_rounded,
+              label: 'Family',
+              selected: false,
+              onTap: () {
+                _openFamily(context);
+              },
+            ),
+
+            // SETTINGS
+            _BottomNavItem(
+              icon: Icons.settings_rounded,
               label: 'Settings',
               selected: false,
-              onTap: () {},
+              onTap: () {
+                _openSettings(context);
+              },
             ),
           ],
         ),
@@ -694,18 +806,200 @@ class CaregiverDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _navItem({
+  void _openProgress(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProgressScreen(
+          patientId: _getPatientId(),
+        ),
+      ),
+    );
+  }
+
+  void _openReminders(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const CaregiverRemindersScreen(),
+      ),
+    );
+  }
+
+  void _openFamily(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const family.FamilyDataScreen(),
+      ),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const CaregiverSettingsScreen(),
+      ),
+    );
+  }
+
+  void _openPatientProfile(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const PatientProfileDetailsScreen(),
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // CIRCLE BUTTON
+  // ===========================================================================
+
+  Widget _circleButton({
     required IconData icon,
-    required String label,
-    required bool selected,
     required VoidCallback onTap,
   }) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 1.5,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Icon(
+              icon,
+              size: 19,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // FIRESTORE SCORE HELPERS
+  // ===========================================================================
+
+  int _getScore(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        sessions,
+    String gameType,
+  ) {
+    int correct = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+
+      if (data['gameType'] == gameType) {
+        correct +=
+            (data['correctAnswers'] as num?)
+                    ?.toInt() ??
+                0;
+      }
+    }
+
+    return correct;
+  }
+
+  int _getTotal(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        sessions,
+    String gameType,
+  ) {
+    int total = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+
+      if (data['gameType'] == gameType) {
+        total +=
+            (data['totalQuestions'] as num?)
+                    ?.toInt() ??
+                0;
+      }
+    }
+
+    return total;
+  }
+
+  int _getCategoryScore(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        sessions,
+    List<String> gameTypes,
+  ) {
+    int score = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+      final type = data['gameType'];
+
+      if (type is String &&
+          gameTypes.contains(type)) {
+        score +=
+            (data['correctAnswers'] as num?)
+                    ?.toInt() ??
+                0;
+      }
+    }
+
+    return score;
+  }
+
+  int _getCategoryTotal(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        sessions,
+    List<String> gameTypes,
+  ) {
+    int total = 0;
+
+    for (final doc in sessions) {
+      final data = doc.data();
+      final type = data['gameType'];
+
+      if (type is String &&
+          gameTypes.contains(type)) {
+        total +=
+            (data['totalQuestions'] as num?)
+                    ?.toInt() ??
+                0;
+      }
+    }
+
+    return total;
+  }
+}
+
+// =============================================================================
+// BOTTOM NAVIGATION ITEM
+// =============================================================================
+
+class _BottomNavItem extends StatelessWidget {
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: 14,
+          horizontal: 7,
           vertical: 5,
         ),
         child: Column(
@@ -722,7 +1016,7 @@ class CaregiverDashboardScreen extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 10.5,
                 fontWeight: selected
                     ? FontWeight.w700
                     : FontWeight.w500,
@@ -736,128 +1030,11 @@ class CaregiverDashboardScreen extends StatelessWidget {
       ),
     );
   }
-
-  // ------------------------------------------------------------
-  // FIRESTORE SCORE HELPERS
-  // ------------------------------------------------------------
-
-  int _getScore(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
-    String gameType,
-  ) {
-    int correct = 0;
-
-    for (final doc in sessions) {
-      final data = doc.data();
-
-      if (data['gameType'] == gameType) {
-        correct +=
-            (data['correctAnswers'] as num?)?.toInt() ?? 0;
-      }
-    }
-
-    return correct;
-  }
-
-  int _getTotal(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
-    String gameType,
-  ) {
-    int total = 0;
-
-    for (final doc in sessions) {
-      final data = doc.data();
-
-      if (data['gameType'] == gameType) {
-        total +=
-            (data['totalQuestions'] as num?)?.toInt() ?? 0;
-      }
-    }
-
-    return total;
-  }
-
-  int _getCategoryScore(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
-    List<String> gameTypes,
-  ) {
-    int score = 0;
-
-    for (final doc in sessions) {
-      final data = doc.data();
-      final type = data['gameType'];
-
-      if (type is String && gameTypes.contains(type)) {
-        score +=
-            (data['correctAnswers'] as num?)?.toInt() ?? 0;
-      }
-    }
-
-    return score;
-  }
-
-  int _getCategoryTotal(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> sessions,
-    List<String> gameTypes,
-  ) {
-    int total = 0;
-
-    for (final doc in sessions) {
-      final data = doc.data();
-      final type = data['gameType'];
-
-      if (type is String && gameTypes.contains(type)) {
-        total +=
-            (data['totalQuestions'] as num?)?.toInt() ?? 0;
-      }
-    }
-
-    return total;
-  }
-
-  // ------------------------------------------------------------
-  // AI SUMMARY
-  // ------------------------------------------------------------
-
-  String _buildAiSummary(
-    String patientName,
-    int faceScore,
-    int faceTotal,
-    int completedActivities,
-  ) {
-    if (completedActivities == 0) {
-      return '$patientName has not completed any activities yet. '
-          'Once activities are completed, the dashboard will show '
-          'their progress and helpful insights here.';
-    }
-
-    if (faceTotal == 0) {
-      return '$patientName has completed '
-          '$completedActivities activity'
-          '${completedActivities == 1 ? '' : 'ies'}. '
-          'More activities will help build a clearer picture of progress.';
-    }
-
-    final percentage = (faceScore / faceTotal) * 100;
-
-    if (percentage >= 80) {
-      return '$patientName is doing well with memory activities. '
-          'Face and name recognition is showing strong performance.';
-    }
-
-    if (percentage >= 50) {
-      return '$patientName is making steady progress. '
-          'Regular short practice sessions may help strengthen memory.';
-    }
-
-    return '$patientName may benefit from gentle, repeated practice. '
-        'Keep activities short, positive, and comfortable.';
-  }
 }
 
-// --------------------------------------------------------------
+// =============================================================================
 // PROGRESS PAINTER
-// --------------------------------------------------------------
+// =============================================================================
 
 class _ProgressPainter extends CustomPainter {
   _ProgressPainter({
@@ -899,7 +1076,8 @@ class _ProgressPainter extends CustomPainter {
       backgroundPaint,
     );
 
-    final progress = completed > 0 ? 1.0 : 0.0;
+    final progress =
+        completed > 0 ? 1.0 : 0.0;
 
     canvas.drawArc(
       Rect.fromCircle(

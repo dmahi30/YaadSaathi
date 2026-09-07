@@ -21,6 +21,10 @@ final Map<String, String> marathi = {
   'continueText': 'पुढे जा',
   'photoUploadComingSoon': 'फोटो अपलोड लवकरच उपलब्ध होईल',
 
+  // Profile Errors
+  'caregiverPinMissing': 'केअरगिव्हर पिन उपलब्ध नाही.',
+  'profileSaveFailed': 'प्रोफाइल जतन करता आली नाही. कृपया पुन्हा प्रयत्न करा.',
+
   // Patient Home
   'goodMorning': 'शुभ प्रभात',
   'online': 'ऑनलाइन',
@@ -122,7 +126,8 @@ final Map<String, String> marathi = {
   'sibling': 'भाऊ / बहीण',
   'other': 'इतर',
 
-    'enterOtp': 'ओटीपी टाका',
+  // OTP Verification
+  'enterOtp': 'ओटीपी टाका',
   'weveSentCodeTo': 'आम्ही 6 अंकी कोड पाठवला आहे',
   'resendOtpIn': 'ओटीपी पुन्हा पाठवा',
   'verify': 'पडताळणी करा',
@@ -130,17 +135,25 @@ final Map<String, String> marathi = {
   'resendOtp': 'ओटीपी पुन्हा पाठवा',
   'otpDemoNotice': 'डेमो मोड: पुढे जाण्यासाठी कोणतेही 6 अंक टाका',
   'otpIncomplete': 'कृपया सर्व 6 अंक टाका',
+
+  // Create PIN
   'createPinTitle': '4 अंकी पिन तयार करा',
-  'pinExplanation': 'हा पिन अ‍ॅपमधील काळजीवाहू सुविधांमध्ये प्रवेश करण्यासाठी वापरला जाईल.',
+  'pinExplanation':
+      'हा पिन अ‍ॅपमधील काळजीवाहू सुविधांमध्ये प्रवेश करण्यासाठी वापरला जाईल.',
   'showPin': 'पिन दाखवा',
   'confirmPin': 'पिनची खात्री करा',
   'pinMismatch': 'पिन जुळत नाहीत',
   'pinIncomplete': 'सर्व 4 अंक टाका',
   'keepInfoSafe': 'आपल्या प्रियजनाची माहिती सुरक्षित ठेवा.',
+
+  // Consent
   'almostDone': 'जवळजवळ पूर्ण झाले!',
-  'reviewAndAccept': 'पुढे जाण्यासाठी कृपया पुनरावलोकन करा आणि स्वीकारा.',
+  'reviewAndAccept':
+      'पुढे जाण्यासाठी कृपया पुनरावलोकन करा आणि स्वीकारा.',
   'agreeToThe': 'मी सहमत आहे',
   'termsAndConditions': 'अटी व शर्ती',
-  'consentDataUse': 'वैयक्तिक काळजी आणि एआय-आधारित शिफारशींसाठी डेटा गोळा करणे आणि वापरण्यास मी संमती देतो/देते.',
-  'dataSafeNotice': 'तुमचा डेटा आमच्याकडे सुरक्षित आहे. तुमच्या संमतीशिवाय आम्ही वैयक्तिक माहिती शेअर करत नाही.',
+  'consentDataUse':
+      'वैयक्तिक काळजी आणि एआय-आधारित शिफारशींसाठी डेटा गोळा करणे आणि वापरण्यास मी संमती देतो/देते.',
+  'dataSafeNotice':
+      'तुमचा डेटा आमच्याकडे सुरक्षित आहे. तुमच्या संमतीशिवाय आम्ही वैयक्तिक माहिती शेअर करत नाही.',
 };

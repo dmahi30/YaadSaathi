@@ -43,14 +43,40 @@ class _PatientProfileScreenState
   void initState() {
     super.initState();
 
-    // IMPORTANT:
-    // Profile starts completely blank.
     _nameController = TextEditingController();
 
-    _dob = null;
+    /*
+     * IMPORTANT:
+     *
+     * If this screen is opened during NEW patient setup,
+     * the form must start blank.
+     *
+     * If this screen is opened later from Settings,
+     * load the already saved patient information.
+     */
+    final existingProfile =
+        patientProfileController;
 
-    _language =
-        AppLanguageController.instance.language;
+    final hasExistingProfile =
+        existingProfile.fullName.trim().isNotEmpty &&
+        existingProfile.dateOfBirth != null;
+
+    if (widget.registrationData == null &&
+        hasExistingProfile) {
+      _nameController.text =
+          existingProfile.fullName;
+
+      _dob =
+          existingProfile.dateOfBirth;
+
+      _language =
+          existingProfile.preferredLanguage;
+    } else {
+      _dob = null;
+
+      _language =
+          AppLanguageController.instance.language;
+    }
   }
 
   @override
@@ -149,6 +175,10 @@ class _PatientProfileScreenState
       lastDate: now,
     );
 
+    if (!mounted) {
+      return;
+    }
+
     if (picked != null) {
       setState(() {
         _dob = picked;
@@ -157,7 +187,7 @@ class _PatientProfileScreenState
   }
 
   void _pickLanguage() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.background,
       isScrollControlled: true,
@@ -166,52 +196,56 @@ class _PatientProfileScreenState
           top: Radius.circular(24),
         ),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return SafeArea(
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight:
-                  MediaQuery.of(context).size.height *
+                  MediaQuery.of(sheetContext).size.height *
                       0.75,
             ),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: AppLanguage.values.map((lang) {
-                  final selected = lang == _language;
+                children: AppLanguage.values.map(
+                  (lang) {
+                    final selected =
+                        lang == _language;
 
-                  return ListTile(
-                    title: Text(
-                      lang.nativeName,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: selected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: selected
-                            ? AppColors.primaryGreen
-                            : AppColors.textDark,
+                    return ListTile(
+                      title: Text(
+                        lang.nativeName,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: selected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: selected
+                              ? AppColors.primaryGreen
+                              : AppColors.textDark,
+                        ),
                       ),
-                    ),
-                    trailing: selected
-                        ? const Icon(
-                            Icons.check_circle,
-                            color:
-                                AppColors.primaryGreen,
-                          )
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        _language = lang;
-                      });
+                      trailing: selected
+                          ? const Icon(
+                              Icons.check_circle,
+                              color:
+                                  AppColors.primaryGreen,
+                            )
+                          : null,
+                      onTap: () {
+                        setState(() {
+                          _language = lang;
+                        });
 
-                      AppLanguageController.instance
-                          .setLanguage(lang);
+                        AppLanguageController
+                            .instance
+                            .setLanguage(lang);
 
-                      Navigator.of(context).pop();
-                    },
-                  );
-                }).toList(),
+                        Navigator.of(sheetContext).pop();
+                      },
+                    );
+                  },
+                ).toList(),
               ),
             ),
           ),
@@ -234,7 +268,8 @@ class _PatientProfileScreenState
   }
 
   Future<void> _onContinue() async {
-    final name = _nameController.text.trim();
+    final name =
+        _nameController.text.trim();
 
     if (name.isEmpty || _dob == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -245,71 +280,137 @@ class _PatientProfileScreenState
           ),
         ),
       );
+
       return;
     }
 
     try {
-      // Save the patient's name locally for the patient UI.
-      PatientNameController.instance.setName(name);
+      /*
+       * Keep the patient name available to the
+       * rest of the patient-facing application.
+       */
+      PatientNameController.instance
+          .setName(name);
 
-      // If this screen was reached through caregiver registration,
-      // save the caregiver and patient information to Firestore.
-      final registrationData = widget.registrationData;
+      final registrationData =
+          widget.registrationData;
 
+      /*
+       * Registration flow:
+       *
+       * Save caregiver + patient together.
+       */
       if (registrationData != null) {
-        final pin = registrationData.pin;
+        final pin =
+            registrationData.pin;
 
         if (pin == null || pin.length != 4) {
+          if (!mounted) {
+            return;
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Caregiver PIN is missing. Please try again.'),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(_language)
+                    .caregiverPinMissing,
+              ),
             ),
           );
+
           return;
         }
 
         final patientId =
-            patientProfileController.createPatientId();
+            patientProfileController
+                .createPatientId();
 
-        await CaregiverAuthService.instance.saveCaregiverAndPatient(
-          fullName: registrationData.fullName,
-          phoneNumber: registrationData.phoneNumber,
-          relationshipKey: registrationData.relationshipKey,
-          preferredLanguage: registrationData.preferredLanguage.name,
+        await CaregiverAuthService
+            .instance
+            .saveCaregiverAndPatient(
+          fullName:
+              registrationData.fullName,
+          phoneNumber:
+              registrationData.phoneNumber,
+          relationshipKey:
+              registrationData.relationshipKey,
+          preferredLanguage:
+              registrationData
+                  .preferredLanguage
+                  .name,
           pin: pin,
-          termsAccepted: widget.termsAccepted,
-          dataUseAccepted: widget.dataUseAccepted,
+          termsAccepted:
+              widget.termsAccepted,
+          dataUseAccepted:
+              widget.dataUseAccepted,
           patientName: name,
           patientDob: _dob!,
-          patientLanguage: _language.name,
+          patientLanguage:
+              _language.name,
           patientId: patientId,
+        );
+      } else {
+        /*
+         * Existing patient profile:
+         *
+         * Update the already existing local
+         * profile controller instead of creating
+         * another patient.
+         */
+        patientProfileController.saveProfile(
+          fullName: name,
+          dateOfBirth: _dob!,
+          preferredLanguage: _language,
         );
       }
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
+      /*
+       * When editing from Settings, simply go back.
+       *
+       * During first-time setup, continue to
+       * Patient Home.
+       */
+      if (registrationData == null) {
+        Navigator.of(context).pop();
+        return;
+      }
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => const PatientHomeScreen(),
+          builder: (_) =>
+              const PatientHomeScreen(),
         ),
         (route) => false,
       );
     } on FirebaseException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e.message ?? 'Could not save the profile. Please try again.',
+            e.message ??
+                AppLocalizations.of(_language)
+                    .profileSaveFailed,
           ),
         ),
       );
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save the profile. Please try again.'),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(_language)
+                .profileSaveFailed,
+          ),
         ),
       );
     }
@@ -322,7 +423,9 @@ class _PatientProfileScreenState
           AppLanguageController.instance,
       builder: (context, _) {
         _language =
-            AppLanguageController.instance.language;
+            AppLanguageController
+                .instance
+                .language;
 
         final l10n =
             AppLocalizations.of(_language);
@@ -332,10 +435,12 @@ class _PatientProfileScreenState
             '${l10n.setupProfileDescription}';
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor:
+              AppColors.background,
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
+              padding:
+                  const EdgeInsets.symmetric(
                 horizontal: 24,
                 vertical: 12,
               ),
@@ -344,12 +449,14 @@ class _PatientProfileScreenState
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () =>
-                            Navigator.of(context)
-                                .maybePop(),
+                        onPressed: () {
+                          Navigator.of(context)
+                              .maybePop();
+                        },
                         icon: const Icon(
                           Icons.arrow_back,
-                          color: AppColors.textDark,
+                          color:
+                              AppColors.textDark,
                         ),
                       ),
                       const Spacer(),
@@ -367,7 +474,8 @@ class _PatientProfileScreenState
                     style: Theme.of(context)
                         .textTheme
                         .headlineMedium,
-                    textAlign: TextAlign.center,
+                    textAlign:
+                        TextAlign.center,
                   ),
 
                   const SizedBox(height: 10),
@@ -377,7 +485,8 @@ class _PatientProfileScreenState
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge,
-                    textAlign: TextAlign.center,
+                    textAlign:
+                        TextAlign.center,
                   ),
 
                   const SizedBox(height: 28),
@@ -399,8 +508,10 @@ class _PatientProfileScreenState
                   const SizedBox(height: 28),
 
                   AppButton(
-                    label: l10n.continueText,
-                    onPressed: _onContinue,
+                    label:
+                        l10n.continueText,
+                    onPressed:
+                        _onContinue,
                   ),
 
                   const SizedBox(height: 12),
@@ -428,7 +539,8 @@ class _PatientProfileScreenState
               color:
                   AppColors.primaryGreenLight,
               border: Border.all(
-                color: AppColors.primaryGreen,
+                color:
+                    AppColors.primaryGreen,
                 width: 2,
               ),
             ),
@@ -436,7 +548,8 @@ class _PatientProfileScreenState
               child: Icon(
                 Icons.person_rounded,
                 size: 76,
-                color: AppColors.primaryGreen,
+                color:
+                    AppColors.primaryGreen,
               ),
             ),
           ),
@@ -448,11 +561,14 @@ class _PatientProfileScreenState
               child: Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration:
+                    BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primaryGreen,
+                  color:
+                      AppColors.primaryGreen,
                   border: Border.all(
-                    color: AppColors.background,
+                    color:
+                        AppColors.background,
                     width: 3,
                   ),
                 ),
@@ -480,22 +596,29 @@ class _PatientProfileScreenState
           Text(
             l10n.name,
             style: const TextStyle(
-              color: AppColors.textMedium,
+              color:
+                  AppColors.textMedium,
               fontSize: 14,
             ),
           ),
           const SizedBox(height: 6),
           TextField(
-            controller: _nameController,
+            controller:
+                _nameController,
             style: const TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textDark,
+              fontWeight:
+                  FontWeight.w600,
+              color:
+                  AppColors.textDark,
             ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
+            decoration:
+                const InputDecoration(
+              border:
+                  InputBorder.none,
               isDense: true,
-              contentPadding: EdgeInsets.zero,
+              contentPadding:
+                  EdgeInsets.zero,
             ),
           ),
         ],
@@ -515,7 +638,8 @@ class _PatientProfileScreenState
           Text(
             l10n.dateOfBirth,
             style: const TextStyle(
-              color: AppColors.textMedium,
+              color:
+                  AppColors.textMedium,
               fontSize: 14,
             ),
           ),
@@ -527,16 +651,20 @@ class _PatientProfileScreenState
                   _dob == null
                       ? ''
                       : _formatDate(_dob!),
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
+                    fontWeight:
+                        FontWeight.w600,
+                    color:
+                        AppColors.textDark,
                   ),
                 ),
               ),
               const Icon(
                 Icons.calendar_today_rounded,
-                color: AppColors.primaryGreen,
+                color:
+                    AppColors.primaryGreen,
               ),
             ],
           ),
@@ -557,7 +685,8 @@ class _PatientProfileScreenState
           Text(
             l10n.preferredLanguage,
             style: const TextStyle(
-              color: AppColors.textMedium,
+              color:
+                  AppColors.textMedium,
               fontSize: 14,
             ),
           ),
@@ -567,16 +696,21 @@ class _PatientProfileScreenState
               Expanded(
                 child: Text(
                   _language.nativeName,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
+                    fontWeight:
+                        FontWeight.w600,
+                    color:
+                        AppColors.textDark,
                   ),
                 ),
               ),
               const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: AppColors.primaryGreen,
+                Icons
+                    .keyboard_arrow_down_rounded,
+                color:
+                    AppColors.primaryGreen,
               ),
             ],
           ),

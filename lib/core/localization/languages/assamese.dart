@@ -21,6 +21,10 @@ final Map<String, String> assamese = {
   'continueText': 'আগলৈ যাওক',
   'photoUploadComingSoon': 'ফটো আপলোড অতি সোনকালে উপলব্ধ হ’ব',
 
+  // Profile Errors
+  'caregiverPinMissing': 'কেয়াৰগিভাৰ পিন উপলব্ধ নহয়।',
+  'profileSaveFailed': 'প্ৰফাইল সংৰক্ষণ কৰিব পৰা নগ’ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।',
+
   // Patient Home
   'goodMorning': 'সুপ্ৰভাত',
   'online': 'অনলাইন',
@@ -122,7 +126,8 @@ final Map<String, String> assamese = {
   'sibling': 'ভাই / ভনী',
   'other': 'অন্যান্য',
 
-    'enterOtp': 'ওটিপি লিখক',
+  // OTP Verification
+  'enterOtp': 'ওটিপি লিখক',
   'weveSentCodeTo': 'আমি ৬-অংকৰ ক\'ড পঠিয়াইছোঁ',
   'resendOtpIn': 'ওটিপি পুনৰ পঠিয়াওক',
   'verify': 'সত্যাপন কৰক',
@@ -130,17 +135,25 @@ final Map<String, String> assamese = {
   'resendOtp': 'ওটিপি পুনৰ পঠিয়াওক',
   'otpDemoNotice': 'ডেম\' ম\'ড: আগবাঢ়িবলৈ যিকোনো ৬টা অংক লিখক',
   'otpIncomplete': 'অনুগ্ৰহ কৰি সকলো ৬টা অংক লিখক',
+
+  // Create PIN
   'createPinTitle': '৪-অংকৰ পিন সাজক',
-  'pinExplanation': 'এই পিনটো এপ্‌টোত কেয়াৰগিভাৰ সুবিধা ব্যৱহাৰ কৰিবলৈ লাগিব।',
+  'pinExplanation':
+      'এই পিনটো এপ্‌টোত কেয়াৰগিভাৰ সুবিধা ব্যৱহাৰ কৰিবলৈ লাগিব।',
   'showPin': 'পিন দেখুৱাওক',
   'confirmPin': 'পিন নিশ্চিত কৰক',
   'pinMismatch': 'পিন মিল নাখালে',
   'pinIncomplete': 'সকলো ৪টা অংক লিখক',
   'keepInfoSafe': 'আপোনাৰ প্ৰিয়জনৰ তথ্য সুৰক্ষিত ৰাখক।',
+
+  // Consent
   'almostDone': 'প্ৰায় শেষ!',
-  'reviewAndAccept': 'আগবাঢ়িবলৈ অনুগ্ৰহ কৰি পৰ্যালোচনা কৰি গ্ৰহণ কৰক।',
+  'reviewAndAccept':
+      'আগবাঢ়িবলৈ অনুগ্ৰহ কৰি পৰ্যালোচনা কৰি গ্ৰহণ কৰক।',
   'agreeToThe': 'মই সন্মত',
   'termsAndConditions': 'নিয়ম আৰু চৰ্তাৱলী',
-  'consentDataUse': 'ব্যক্তিগতকৃত যত্ন আৰু এআই-আধাৰিত পৰামৰ্শ প্ৰদানৰ বাবে তথ্য সংগ্ৰহ আৰু ব্যৱহাৰত মই সন্মতি দিছোঁ।',
-  'dataSafeNotice': 'আপোনাৰ তথ্য আমাৰ ওচৰত সুৰক্ষিত। আপোনাৰ সন্মতি অবিহনে আমি ব্যক্তিগত তথ্য অংশীদাৰী নকৰোঁ।',
+  'consentDataUse':
+      'ব্যক্তিগতকৃত যত্ন আৰু এআই-আধাৰিত পৰামৰ্শ প্ৰদানৰ বাবে তথ্য সংগ্ৰহ আৰু ব্যৱহাৰত মই সন্মতি দিছোঁ।',
+  'dataSafeNotice':
+      'আপোনাৰ তথ্য আমাৰ ওচৰত সুৰক্ষিত। আপোনাৰ সন্মতি অবিহনে আমি ব্যক্তিগত তথ্য অংশীদাৰী নকৰোঁ।',
 };
