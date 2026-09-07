@@ -11,6 +11,7 @@ import '../../../data/models/reminder.dart';
 import '../../caregiver/memory_circle/memory_circle_screen.dart';
 import '../games/face_name_match/face_name_match_screen.dart';
 import '../settings/patient_settings_screen.dart';
+import '../voice/voice_assistant_screen.dart';
 
 class PatientHomeScreen extends StatelessWidget {
   const PatientHomeScreen({super.key});
@@ -487,16 +488,13 @@ class PatientHomeScreen extends StatelessWidget {
               icon: Icons.mic_rounded,
               label: l10n.voice,
               active: false,
-              onTap: () {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n.voiceAssistantComingSoon,
-                    ),
-                  ),
-                );
-              },
+                onTap: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const VoiceAssistantScreen(),
+                       ),
+                      );
+                  },
             ),
 
             // ==============================================================
