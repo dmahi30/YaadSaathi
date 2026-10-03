@@ -1,4 +1,4 @@
-# YaadSaathi 🧠💚
+# YaadSaathi
 
 ### A little memory, a lot of love.
 
